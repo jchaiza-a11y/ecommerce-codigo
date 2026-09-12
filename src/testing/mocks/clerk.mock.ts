@@ -17,3 +17,42 @@ export function mockClerkAuth(result: { userId: string | null }) {
     exports: { auth: async () => result },
   });
 }
+
+/**
+ * Mismo motivo que `mockClerkAuth`, para el lado de `clerkClient()` (usado
+ * por `server/services/user-access.service.ts` para escribir
+ * `publicMetadata`). Registra cada llamada a `users.updateUserMetadata` para
+ * que el test pueda inspeccionar qué se le mandó a Clerk.
+ *
+ * @example
+ * const clerk = mockClerkClient();
+ * const { markPendingAccess } = await import("@/server/services/user-access.service.ts");
+ * await markPendingAccess("clerk_1", ["manager"]);
+ * assert.deepEqual(clerk.argsFor("updateUserMetadata")?.[1], { publicMetadata: {...} });
+ */
+export function mockClerkClient() {
+  const calls: { method: string; args: unknown[] }[] = [];
+
+  mock.module("@clerk/nextjs/server", {
+    exports: {
+      clerkClient: async () => ({
+        users: {
+          updateUserMetadata: async (...args: unknown[]) => {
+            calls.push({ method: "updateUserMetadata", args });
+            return {};
+          },
+        },
+      }),
+    },
+  });
+
+  return {
+    calls,
+    argsFor(method: string): unknown[] | undefined {
+      return calls.find((call) => call.method === method)?.args;
+    },
+    resetCalls() {
+      calls.length = 0;
+    },
+  };
+}
