@@ -11,7 +11,7 @@ type FakeOrder = {
 
 let orderResult: FakeOrder;
 mock.module("@/server/repositories/order.repository", {
-  exports: { findByIdAndUserId: async () => orderResult },
+  namedExports: { findByIdAndUserId: async () => orderResult },
 });
 
 let retrievePaymentIntent = async (_id: string, _opts: unknown): Promise<unknown> => ({});

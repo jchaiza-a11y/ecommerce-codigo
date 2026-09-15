@@ -14,16 +14,16 @@ type FakeProduct = {
 
 let products: Record<string, FakeProduct> = {};
 mock.module("@/server/repositories/product.repository", {
-  exports: { findById: async (id: string) => products[id] },
+  namedExports: { findById: async (id: string) => products[id] },
 });
 
 const createWithItemsMock = mock.fn(async (_values: unknown, _items: unknown[]) => {});
 mock.module("@/server/repositories/order.repository", {
-  exports: { createWithItems: createWithItemsMock },
+  namedExports: { createWithItems: createWithItemsMock },
 });
 
 mock.module("@/server/services/saved-card.service", {
-  exports: { ensureStripeCustomer: async () => "cus_1" },
+  namedExports: { ensureStripeCustomer: async () => "cus_1" },
 });
 
 let sessionsCreate = async (params: unknown): Promise<Record<string, unknown>> => ({

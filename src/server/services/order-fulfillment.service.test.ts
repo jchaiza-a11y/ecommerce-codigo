@@ -31,7 +31,7 @@ const buildMarkFailedMock = mock.fn((orderId: string, paymentIntentId: string | 
 }));
 
 mock.module("@/server/repositories/order.repository", {
-  exports: {
+  namedExports: {
     findByStripeCheckoutSessionId: async () => existingOrder,
     findWithItems: async () => orderDetail,
     buildMarkPaid: buildMarkPaidMock,
@@ -47,7 +47,7 @@ const buildStockDecrementMock = mock.fn((productId: string, quantity: number, or
 }));
 
 mock.module("@/server/repositories/product.repository", {
-  exports: {
+  namedExports: {
     findById: async (productId: string) =>
       productStocks[productId] !== undefined ? { stock: productStocks[productId] } : undefined,
     buildStockDecrement: buildStockDecrementMock,
@@ -56,7 +56,7 @@ mock.module("@/server/repositories/product.repository", {
 
 let batchedStatements: unknown[] = [];
 mock.module("@/server/db/batch", {
-  exports: {
+  namedExports: {
     runBatch: async (statements: unknown[]) => {
       batchedStatements = statements;
     },

@@ -7,7 +7,7 @@ import { mockDbQuery } from "@/testing/mocks/db.mock.ts";
 const db = mockDbQuery();
 const runBatchMock = mock.fn(async (_statements: unknown[]) => {});
 mock.module("@/server/db/batch", {
-  exports: { runBatch: runBatchMock },
+  namedExports: { runBatch: runBatchMock },
 });
 
 const {

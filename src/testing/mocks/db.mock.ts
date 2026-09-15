@@ -13,7 +13,7 @@ import { mock } from "node:test";
  */
 export function mockDb(overrides: Record<string, unknown>) {
   mock.module("@/server/db", {
-    exports: { db: overrides },
+    namedExports: { db: overrides },
   });
 }
 

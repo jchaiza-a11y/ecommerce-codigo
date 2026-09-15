@@ -4,7 +4,7 @@ import { mock } from "node:test";
 
 let authResult: { userId: string | null } = { userId: null };
 mock.module("@clerk/nextjs/server", {
-  exports: { auth: async () => authResult },
+  namedExports: { auth: async () => authResult },
 });
 
 type RepoAccess = {
@@ -22,7 +22,7 @@ type RepoAccess = {
 
 let repoResult: RepoAccess = null;
 mock.module("@/server/repositories/user.repository", {
-  exports: { findRolesAndPermissionsByClerkId: async () => repoResult },
+  namedExports: { findRolesAndPermissionsByClerkId: async () => repoResult },
 });
 
 const { getCurrentUser, getCurrentUserState } = await import("@/lib/auth.ts");

@@ -11,6 +11,6 @@ import { mock } from "node:test";
  */
 export function mockStripe(overrides: Record<string, unknown>) {
   mock.module("@/lib/stripe", {
-    exports: { stripe: overrides },
+    namedExports: { stripe: overrides },
   });
 }

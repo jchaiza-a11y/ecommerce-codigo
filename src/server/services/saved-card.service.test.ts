@@ -19,14 +19,14 @@ let findByIdAndUserIdResult: { id: string; stripePaymentMethodId: string } | und
 const deleteByIdMock = mock.fn(async (_id: string) => {});
 
 mock.module("@/server/repositories/user.repository", {
-  exports: {
+  namedExports: {
     findById: async () => (findByIdQueue.length > 0 ? findByIdQueue.shift() : userById),
     attachStripeCustomerId: attachStripeCustomerIdMock,
   },
 });
 
 mock.module("@/server/repositories/payment-method.repository", {
-  exports: {
+  namedExports: {
     upsertByStripeId: async () => upsertResult,
     findByIdAndUserId: async () => findByIdAndUserIdResult,
     deleteById: deleteByIdMock,

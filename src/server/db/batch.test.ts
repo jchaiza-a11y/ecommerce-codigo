@@ -4,7 +4,7 @@ import { mock } from "node:test";
 
 const batchMock = mock.fn(async (_statements: unknown[]) => {});
 mock.module("@/server/db", {
-  exports: { db: { batch: batchMock } },
+  namedExports: { db: { batch: batchMock } },
 });
 
 const { runBatch } = await import("@/server/db/batch.ts");

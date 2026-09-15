@@ -14,7 +14,7 @@ import { mock } from "node:test";
  */
 export function mockClerkAuth(result: { userId: string | null }) {
   mock.module("@clerk/nextjs/server", {
-    exports: { auth: async () => result },
+    namedExports: { auth: async () => result },
   });
 }
 
@@ -34,7 +34,7 @@ export function mockClerkClient() {
   const calls: { method: string; args: unknown[] }[] = [];
 
   mock.module("@clerk/nextjs/server", {
-    exports: {
+    namedExports: {
       clerkClient: async () => ({
         users: {
           updateUserMetadata: async (...args: unknown[]) => {

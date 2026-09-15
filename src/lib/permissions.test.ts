@@ -7,7 +7,7 @@ import type { CurrentUser } from "@/lib/auth";
 
 let mockedUser: CurrentUser | null = null;
 mock.module("@/lib/auth", {
-  exports: { getCurrentUser: async () => mockedUser },
+  namedExports: { getCurrentUser: async () => mockedUser },
 });
 
 const {

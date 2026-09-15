@@ -4,12 +4,12 @@ import { mock } from "node:test";
 
 const buildInsertMock = mock.fn((row: unknown) => ({ statement: "INSERT_STUB", row }));
 mock.module("@/server/repositories/audit-log.repository", {
-  exports: { buildInsert: buildInsertMock },
+  namedExports: { buildInsert: buildInsertMock },
 });
 
 const runBatchMock = mock.fn(async (_statements: unknown[]) => {});
 mock.module("@/server/db/batch", {
-  exports: { runBatch: runBatchMock },
+  namedExports: { runBatch: runBatchMock },
 });
 
 const { AUDIT_ACTIONS, buildAuditLogInsert, recordAuditLog, getRequestAuditContext } =

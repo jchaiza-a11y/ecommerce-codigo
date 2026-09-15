@@ -13,7 +13,7 @@ let accessResult: {
 } | undefined;
 
 mock.module("@/server/repositories/user.repository", {
-  exports: { findRolesAndPermissionsByClerkId: async () => accessResult },
+  namedExports: { findRolesAndPermissionsByClerkId: async () => accessResult },
 });
 
 const { syncClerkAccessMetadata, markPendingAccess } = await import(

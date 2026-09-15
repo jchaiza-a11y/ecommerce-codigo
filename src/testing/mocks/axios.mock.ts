@@ -41,7 +41,7 @@ export function mockApi() {
     },
   );
 
-  mock.module("@/lib/axios", { exports: { api } });
+  mock.module("@/lib/axios", { namedExports: { api } });
 
   return {
     /** Configura qué devuelve (o lanza) el próximo `api.<method>(...)`. */
