@@ -104,9 +104,9 @@ threshold }[] }`. Importes siempre en centavos enteros.
 - [x] T10 — Tests del repositorio con `mockDbQuery()` · `src/server/repositories/metrics.repository.test.ts`
 - [x] T11 — Servicio `getDashboardMetrics()`: calcula la ventana de 30 días, lanza las 4 queries con `Promise.all` y arma el payload (usa T4) · `src/server/services/dashboard.service.ts`
 - [x] T12 — Route Handler: guard de permiso → service → 200/500 · `src/app/api/admin/metrics/route.ts`
-- [ ] T13 — Service axios `getDashboardMetrics()` · `src/modules/dashboard/services/dashboard.service.ts`
-- [ ] T14 — Query keys `dashboardKeys` + constantes (`POLL_INTERVAL_MS = 30_000`, `RANGE_DAYS = 30`) · `src/modules/dashboard/constants.ts`
-- [ ] T15 — Hook `useDashboardMetrics()` (`refetchInterval`, `refetchIntervalInBackground: false`) · `src/modules/dashboard/hooks/use-dashboard-metrics.ts`
+- [x] T13 — Service axios `getDashboardMetrics()` · `src/modules/dashboard/services/dashboard.service.ts`
+- [x] T14 — Query keys `dashboardKeys` + constantes (`POLL_INTERVAL_MS = 30_000`, `RANGE_DAYS = 30`) · `src/modules/dashboard/constants.ts`
+- [x] T15 — Hook `useDashboardMetrics()` (`refetchInterval`, `refetchIntervalInBackground: false`) · `src/modules/dashboard/hooks/use-dashboard-metrics.ts`
 - [ ] T16 — Tarjetas de KPI presentacionales · `src/modules/dashboard/components/kpi-cards.tsx`
 - [ ] T17 — Línea de ventas/pedidos por día (Recharts, eje Y de importes con `formatPrice`) · `src/modules/dashboard/components/sales-line-chart.tsx`
 - [ ] T18 — Barras horizontales de top productos · `src/modules/dashboard/components/top-products-chart.tsx`
