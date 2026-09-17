@@ -102,8 +102,8 @@ threshold }[] }`. Importes siempre en centavos enteros.
 - [x] T8 — Query `getTopProducts(since, limit)`: join `order_items` × `orders` `paid`, `sum(quantity)` desc · mismo archivo
 - [x] T9 — Query `findLowStockProducts(limit)`: `stock <= low_stock_threshold`, activos, `deleted_at is null`, orden `stock asc` · mismo archivo
 - [x] T10 — Tests del repositorio con `mockDbQuery()` · `src/server/repositories/metrics.repository.test.ts`
-- [ ] T11 — Servicio `getDashboardMetrics()`: calcula la ventana de 30 días, lanza las 4 queries con `Promise.all` y arma el payload (usa T4) · `src/server/services/dashboard.service.ts`
-- [ ] T12 — Route Handler: guard de permiso → service → 200/500 · `src/app/api/admin/metrics/route.ts`
+- [x] T11 — Servicio `getDashboardMetrics()`: calcula la ventana de 30 días, lanza las 4 queries con `Promise.all` y arma el payload (usa T4) · `src/server/services/dashboard.service.ts`
+- [x] T12 — Route Handler: guard de permiso → service → 200/500 · `src/app/api/admin/metrics/route.ts`
 - [ ] T13 — Service axios `getDashboardMetrics()` · `src/modules/dashboard/services/dashboard.service.ts`
 - [ ] T14 — Query keys `dashboardKeys` + constantes (`POLL_INTERVAL_MS = 30_000`, `RANGE_DAYS = 30`) · `src/modules/dashboard/constants.ts`
 - [ ] T15 — Hook `useDashboardMetrics()` (`refetchInterval`, `refetchIntervalInBackground: false`) · `src/modules/dashboard/hooks/use-dashboard-metrics.ts`
