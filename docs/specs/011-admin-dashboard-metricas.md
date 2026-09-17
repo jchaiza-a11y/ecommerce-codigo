@@ -111,8 +111,8 @@ threshold }[] }`. Importes siempre en centavos enteros.
 - [x] T17 — Línea de ventas/pedidos por día (Recharts, eje Y de importes con `formatPrice`) · `src/modules/dashboard/components/sales-line-chart.tsx`
 - [x] T18 — Barras horizontales de top productos · `src/modules/dashboard/components/top-products-chart.tsx`
 - [x] T19 — Lista de stock bajo con `Table` y estado vacío · `src/modules/dashboard/components/low-stock-list.tsx`
-- [ ] T20 — Contenedor `"use client"` que consume el hook y cubre carga / error+reintentar / vacío · `src/modules/dashboard/components/dashboard-view.tsx`
-- [ ] T21 — Página Server Component que monta `DashboardView` · `src/app/(admin)/admin/page.tsx`
+- [x] T20 — Contenedor `"use client"` que consume el hook y cubre carga / error+reintentar / vacío · `src/modules/dashboard/components/dashboard-view.tsx`
+- [x] T21 — Página Server Component que monta `DashboardView` · `src/app/(admin)/admin/page.tsx`
 
 Verificación final: `npm run typecheck && npm run lint && npm run test` (el `build` lo corre el reviewer)
 
