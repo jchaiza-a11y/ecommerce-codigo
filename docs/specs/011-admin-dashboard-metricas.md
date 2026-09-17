@@ -1,7 +1,7 @@
 ---
 id: 011
 title: Dashboard de administración — métricas en vivo (últimos 30 días)
-status: in-progress
+status: in-review
 module: dashboard
 scope: admin
 ---
