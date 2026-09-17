@@ -23,6 +23,7 @@ const ADMIN_ROUTE_PERMISSIONS: ReadonlyArray<{
   { prefix: "/api/admin/users", permission: "users.view" },
   { prefix: "/api/admin/roles", permission: "roles.view" },
   { prefix: "/api/admin/audit-logs", permission: "audit_logs.view" },
+  { prefix: "/api/admin/metrics", permission: "dashboard.view" },
   { prefix: "/admin", permission: "dashboard.view" },
 ];
 
