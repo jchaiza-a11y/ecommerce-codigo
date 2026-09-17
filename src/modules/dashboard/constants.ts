@@ -20,3 +20,18 @@ export const POLL_INTERVAL_MS = 30_000;
  * ("Últimos 30 días").
  */
 export const RANGE_DAYS = 30;
+
+// `useGrouping: "always"` por el mismo motivo que en `products/constants.ts`:
+// `es-ES` usa `minimumGroupingDigits: 2` y dejaría `1234` sin separador.
+const integerFormatter = new Intl.NumberFormat("es-ES", {
+  useGrouping: "always",
+  maximumFractionDigits: 0,
+});
+
+/**
+ * Magnitudes discretas del dashboard (pedidos, unidades, stock). Los importes
+ * NO pasan por aquí: van siempre con `formatPrice()` (AC10).
+ */
+export function formatUnits(value: number): string {
+  return integerFormatter.format(value);
+}
