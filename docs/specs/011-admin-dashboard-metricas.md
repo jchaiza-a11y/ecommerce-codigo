@@ -94,9 +94,9 @@ threshold }[] }`. Importes siempre en centavos enteros.
 ## Tareas
 - [x] T1 — Columna `lowStockThreshold` (integer, notNull, default 5) + check de no negatividad · `src/server/db/schema/product.ts`
 - [x] T2 — Generar y aplicar la migración (`npm run db:generate && npm run db:migrate`) · `drizzle/`
-- [ ] T3 — Tipos del payload `DashboardMetrics` y sus partes · `src/modules/dashboard/types/dashboard.types.ts`
-- [ ] T4 — Funciones puras `fillMissingDays(rows, start, days)` y `averageTicketCents(salesCents, orders)` · `src/modules/dashboard/lib/metrics-series.ts`
-- [ ] T5 — Tests `node --test` de T4 (días sin ventas a 0, orden ascendente, 0 pedidos → 0) · `src/modules/dashboard/lib/metrics-series.test.ts`
+- [x] T3 — Tipos del payload `DashboardMetrics` y sus partes · `src/modules/dashboard/types/dashboard.types.ts`
+- [x] T4 — Funciones puras `fillMissingDays(rows, start, days)` y `averageTicketCents(salesCents, orders)` · `src/modules/dashboard/lib/metrics-series.ts`
+- [x] T5 — Tests `node --test` de T4 (días sin ventas a 0, orden ascendente, 0 pedidos → 0) · `src/modules/dashboard/lib/metrics-series.test.ts`
 - [ ] T6 — Query `getSalesSummary(since)`: `sum(total_cents)` y `count(*)` de `orders` `paid` · `src/server/repositories/metrics.repository.ts`
 - [ ] T7 — Query `getDailySales(since)`: agrupada por `date_trunc('day', created_at)` UTC, orden ascendente · mismo archivo
 - [ ] T8 — Query `getTopProducts(since, limit)`: join `order_items` × `orders` `paid`, `sum(quantity)` desc · mismo archivo
