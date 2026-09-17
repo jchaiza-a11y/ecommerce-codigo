@@ -97,11 +97,11 @@ threshold }[] }`. Importes siempre en centavos enteros.
 - [x] T3 — Tipos del payload `DashboardMetrics` y sus partes · `src/modules/dashboard/types/dashboard.types.ts`
 - [x] T4 — Funciones puras `fillMissingDays(rows, start, days)` y `averageTicketCents(salesCents, orders)` · `src/modules/dashboard/lib/metrics-series.ts`
 - [x] T5 — Tests `node --test` de T4 (días sin ventas a 0, orden ascendente, 0 pedidos → 0) · `src/modules/dashboard/lib/metrics-series.test.ts`
-- [ ] T6 — Query `getSalesSummary(since)`: `sum(total_cents)` y `count(*)` de `orders` `paid` · `src/server/repositories/metrics.repository.ts`
-- [ ] T7 — Query `getDailySales(since)`: agrupada por `date_trunc('day', created_at)` UTC, orden ascendente · mismo archivo
-- [ ] T8 — Query `getTopProducts(since, limit)`: join `order_items` × `orders` `paid`, `sum(quantity)` desc · mismo archivo
-- [ ] T9 — Query `findLowStockProducts(limit)`: `stock <= low_stock_threshold`, activos, `deleted_at is null`, orden `stock asc` · mismo archivo
-- [ ] T10 — Tests del repositorio con `mockDbQuery()` · `src/server/repositories/metrics.repository.test.ts`
+- [x] T6 — Query `getSalesSummary(since)`: `sum(total_cents)` y `count(*)` de `orders` `paid` · `src/server/repositories/metrics.repository.ts`
+- [x] T7 — Query `getDailySales(since)`: agrupada por `date_trunc('day', created_at)` UTC, orden ascendente · mismo archivo
+- [x] T8 — Query `getTopProducts(since, limit)`: join `order_items` × `orders` `paid`, `sum(quantity)` desc · mismo archivo
+- [x] T9 — Query `findLowStockProducts(limit)`: `stock <= low_stock_threshold`, activos, `deleted_at is null`, orden `stock asc` · mismo archivo
+- [x] T10 — Tests del repositorio con `mockDbQuery()` · `src/server/repositories/metrics.repository.test.ts`
 - [ ] T11 — Servicio `getDashboardMetrics()`: calcula la ventana de 30 días, lanza las 4 queries con `Promise.all` y arma el payload (usa T4) · `src/server/services/dashboard.service.ts`
 - [ ] T12 — Route Handler: guard de permiso → service → 200/500 · `src/app/api/admin/metrics/route.ts`
 - [ ] T13 — Service axios `getDashboardMetrics()` · `src/modules/dashboard/services/dashboard.service.ts`
