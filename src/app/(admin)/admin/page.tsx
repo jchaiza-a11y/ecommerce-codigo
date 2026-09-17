@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { requirePermissionInPage } from "@/lib/permissions";
 import { DashboardView } from "@/modules/dashboard/components/dashboard-view";
 import { RANGE_DAYS } from "@/modules/dashboard/constants";
 
@@ -9,14 +10,19 @@ export const metadata: Metadata = {
 };
 
 /**
- * Raíz del panel (011 T21). No repite el guard de `dashboard.view`: `proxy.ts`
- * ya lo exige en esta ruta y, a diferencia del resto de páginas admin, aquí no
- * puede limitarse a cortar el render — sin el permiso redirige a la primera
- * sección permitida (003 §8.7), y duplicar la comprobación con
- * `requirePermissionInPage` mandaría a `/admin/forbidden` a un rol que sí tiene
- * panel. El `"use client"` queda contenido en `DashboardView`.
+ * Raíz del panel (011 T21). El `"use client"` queda contenido en
+ * `DashboardView`.
  */
-export default function AdminDashboardPage() {
+export default async function AdminDashboardPage() {
+  // Segunda capa de defensa, igual que en las demás páginas que muestran datos
+  // protegidos por permiso (003 §8.1): `proxy.ts` decide con los permisos
+  // cacheados en el JWT, así que un rol revocado en Postgres seguiría pasando
+  // el filtro de ruta hasta que la sesión refresque el claim. Esto revalida
+  // contra la base. El desvío a la primera sección permitida para quien no
+  // tiene `dashboard.view` (§8.7) ocurre antes, en el middleware, y no llega
+  // hasta aquí.
+  await requirePermissionInPage("dashboard.view");
+
   return (
     <div className="flex flex-col gap-6">
       <header>
