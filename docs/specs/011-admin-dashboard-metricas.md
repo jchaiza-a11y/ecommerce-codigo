@@ -107,10 +107,10 @@ threshold }[] }`. Importes siempre en centavos enteros.
 - [x] T13 — Service axios `getDashboardMetrics()` · `src/modules/dashboard/services/dashboard.service.ts`
 - [x] T14 — Query keys `dashboardKeys` + constantes (`POLL_INTERVAL_MS = 30_000`, `RANGE_DAYS = 30`) · `src/modules/dashboard/constants.ts`
 - [x] T15 — Hook `useDashboardMetrics()` (`refetchInterval`, `refetchIntervalInBackground: false`) · `src/modules/dashboard/hooks/use-dashboard-metrics.ts`
-- [ ] T16 — Tarjetas de KPI presentacionales · `src/modules/dashboard/components/kpi-cards.tsx`
-- [ ] T17 — Línea de ventas/pedidos por día (Recharts, eje Y de importes con `formatPrice`) · `src/modules/dashboard/components/sales-line-chart.tsx`
-- [ ] T18 — Barras horizontales de top productos · `src/modules/dashboard/components/top-products-chart.tsx`
-- [ ] T19 — Lista de stock bajo con `Table` y estado vacío · `src/modules/dashboard/components/low-stock-list.tsx`
+- [x] T16 — Tarjetas de KPI presentacionales · `src/modules/dashboard/components/kpi-cards.tsx`
+- [x] T17 — Línea de ventas/pedidos por día (Recharts, eje Y de importes con `formatPrice`) · `src/modules/dashboard/components/sales-line-chart.tsx`
+- [x] T18 — Barras horizontales de top productos · `src/modules/dashboard/components/top-products-chart.tsx`
+- [x] T19 — Lista de stock bajo con `Table` y estado vacío · `src/modules/dashboard/components/low-stock-list.tsx`
 - [ ] T20 — Contenedor `"use client"` que consume el hook y cubre carga / error+reintentar / vacío · `src/modules/dashboard/components/dashboard-view.tsx`
 - [ ] T21 — Página Server Component que monta `DashboardView` · `src/app/(admin)/admin/page.tsx`
 
@@ -119,6 +119,17 @@ Verificación final: `npm run typecheck && npm run lint && npm run test` (el `bu
 ## Notas
 - **Skill obligatoria en T17/T18**: usar `dataviz` antes de escribir los gráficos (paleta, ejes, leyendas, legibilidad en claro/oscuro), según CLAUDE.md §8.
 - **Dos series, dos escalas.** Ventas (centavos) y pedidos (unidades) no comparten eje: eje Y doble o dos gráficos; decidirlo con `dataviz`, no mezclar magnitudes en un eje único.
+  **Resuelto en T17: dos gráficos apilados (small multiples), no eje Y doble.** `dataviz`
+  prohíbe el eje doble sin excepción ("Never a dual-axis chart"): la alineación entre las
+  dos escalas es arbitraria e inventa una correlación que no está en el dato. Los dos
+  facets comparten el eje X y un ancho de eje Y fijo (92 px) para que las áreas de dibujo
+  queden alineadas y un mismo día caiga en la misma X.
+- **Color de las series (T17/T18).** Cada gráfico lleva una sola serie, así que no hay
+  identidad que separar por tono y no aplica paleta categórica. Se usa `var(--primary)`,
+  que ya invierte por tema. Los tokens `--chart-1..5` del proyecto son grises sin croma y
+  el validador de `dataviz` los deja por debajo de 3:1 contra la superficie en algún modo
+  (`--chart-1` 1.48:1 en claro; `--chart-3` 2.29:1 y `--chart-4` 1.73:1 en oscuro);
+  `--primary` pasa en ambos. No se añaden tokens globales nuevos.
 - **Filas existentes.** El default `5` se aplica a todos los productos ya creados al correr la migración; no hay backfill manual ni dato a migrar.
 - **Efecto colateral controlado.** `product.repository.ts` selecciona el objeto `product` completo, así que `lowStockThreshold` empezará a viajar en las respuestas de productos. Es inocuo (no es dato sensible) y no obliga a tocar 002.
 - **Polling y caché.** `makeQueryClient()` tiene `staleTime: 60 s`, mayor que el intervalo de 30 s: el hook debe fijar su propio `staleTime` por debajo del intervalo o el refetch periódico no traerá datos nuevos.
