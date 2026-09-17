@@ -1,14 +1,15 @@
 import "server-only";
 
+// `RANGE_DAYS` vive en el módulo de cliente y se importa desde aquí (y no al
+// revés) para que el rango del servidor y los textos "Últimos 30 días" de la UI
+// no puedan desincronizarse. `constants.ts` no importa nada de `server/`.
+import { RANGE_DAYS } from "@/modules/dashboard/constants";
 import {
   averageTicketCents,
   fillMissingDays,
 } from "@/modules/dashboard/lib/metrics-series";
 import type { DashboardMetrics } from "@/modules/dashboard/types/dashboard.types";
 import * as metricsRepository from "@/server/repositories/metrics.repository";
-
-/** Ventana fija del dashboard; no hay selector de rango (011 §Alcance). */
-const RANGE_DAYS = 30;
 
 /** Barras del gráfico de productos más vendidos. */
 const TOP_PRODUCTS_LIMIT = 10;

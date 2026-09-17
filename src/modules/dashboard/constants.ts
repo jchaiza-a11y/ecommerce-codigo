@@ -15,9 +15,9 @@ export const dashboardKeys = {
 export const POLL_INTERVAL_MS = 30_000;
 
 /**
- * Tamaño de la ventana de métricas, en días. Es documentacional en el cliente:
- * el servidor calcula su propio rango; aquí solo alimenta textos de UI
- * ("Últimos 30 días").
+ * Tamaño de la ventana de métricas, en días. Fuente única: la consume tanto
+ * `server/services/dashboard.service.ts` para calcular el rango como los textos
+ * de UI ("Últimos 30 días"), así que no pueden desincronizarse.
  */
 export const RANGE_DAYS = 30;
 
