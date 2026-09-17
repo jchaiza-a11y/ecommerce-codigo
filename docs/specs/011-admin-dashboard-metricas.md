@@ -1,7 +1,7 @@
 ---
 id: 011
 title: Dashboard de administración — métricas en vivo (últimos 30 días)
-status: in-review
+status: done
 module: dashboard
 scope: admin
 ---
@@ -38,16 +38,16 @@ No incluye:
 - Lo que cubren 012 (pedidos), 013 (inventario) y 014 (finanzas): son specs aparte.
 
 ## Criterios de aceptación
-- [ ] AC1 — Dado un admin con `dashboard.view`, cuando abre `/admin`, entonces ve las 4 tarjetas de KPI con datos de los últimos 30 días.
-- [ ] AC2 — Dado pedidos en estado `pending`, `failed` o `canceled`, entonces no suman en ningún KPI ni en ningún gráfico: solo cuentan los `paid`.
-- [ ] AC3 — Dado un día del rango sin ventas, cuando se pinta la línea, entonces ese día aparece en el eje X con valor 0 (30 puntos siempre, sin huecos).
-- [ ] AC4 — Dado 0 pedidos pagados en el rango, entonces el ticket promedio es 0 y no se divide por cero.
-- [ ] AC5 — Dado un producto activo y no borrado con `stock <= low_stock_threshold`, entonces aparece en la lista de stock bajo y suma en el KPI; un producto inactivo o con `deleted_at` no aparece.
-- [ ] AC6 — Dado el dashboard abierto, cuando pasan 30 s con la pestaña visible, entonces los datos se refrescan; con la pestaña oculta no se lanza la petición.
-- [ ] AC7 — Dado un usuario sin `dashboard.view`, cuando llama a `GET /api/admin/metrics`, entonces responde 403 (401 si no hay sesión), sin filtrar datos.
-- [ ] AC8 — Dado el estado de carga, entonces hay skeletons en tarjetas y gráficos; dado un fallo de red, entonces hay mensaje de error y botón "Reintentar".
-- [ ] AC9 — Dado que no hay ventas ni stock bajo, entonces cada bloque muestra su estado vacío en vez de un gráfico en blanco.
-- [ ] AC10 — Dados importes en centavos, cuando se muestran en tarjetas, ejes y tooltips, entonces se formatean con `formatPrice()`; nunca se guarda ni se opera con decimales.
+- [x] AC1 — Dado un admin con `dashboard.view`, cuando abre `/admin`, entonces ve las 4 tarjetas de KPI con datos de los últimos 30 días.
+- [x] AC2 — Dado pedidos en estado `pending`, `failed` o `canceled`, entonces no suman en ningún KPI ni en ningún gráfico: solo cuentan los `paid`.
+- [x] AC3 — Dado un día del rango sin ventas, cuando se pinta la línea, entonces ese día aparece en el eje X con valor 0 (30 puntos siempre, sin huecos).
+- [x] AC4 — Dado 0 pedidos pagados en el rango, entonces el ticket promedio es 0 y no se divide por cero.
+- [x] AC5 — Dado un producto activo y no borrado con `stock <= low_stock_threshold`, entonces aparece en la lista de stock bajo y suma en el KPI; un producto inactivo o con `deleted_at` no aparece.
+- [x] AC6 — Dado el dashboard abierto, cuando pasan 30 s con la pestaña visible, entonces los datos se refrescan; con la pestaña oculta no se lanza la petición.
+- [x] AC7 — Dado un usuario sin `dashboard.view`, cuando llama a `GET /api/admin/metrics`, entonces responde 403 (401 si no hay sesión), sin filtrar datos.
+- [x] AC8 — Dado el estado de carga, entonces hay skeletons en tarjetas y gráficos; dado un fallo de red, entonces hay mensaje de error y botón "Reintentar".
+- [x] AC9 — Dado que no hay ventas ni stock bajo, entonces cada bloque muestra su estado vacío en vez de un gráfico en blanco.
+- [x] AC10 — Dados importes en centavos, cuando se muestran en tarjetas, ejes y tooltips, entonces se formatean con `formatPrice()`; nunca se guarda ni se opera con decimales.
 
 ## Datos
 Único cambio de esquema (**requiere migración**):
