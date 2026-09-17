@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import type { SQL } from "drizzle-orm";
 import { PgDialect } from "drizzle-orm/pg-core";
 
+import { orderItem } from "@/server/db/schema/order-item.ts";
 import { mockDbQuery } from "@/testing/mocks/db.mock.ts";
 
 const db = mockDbQuery();
@@ -126,6 +127,44 @@ test("getTopProducts() maps the aggregated row and keeps the ranking order", asy
   assert.deepEqual(await getTopProducts(SINCE, 10), [
     { productId: "prod_1", name: "Teclado", units: 12, salesCents: 60000 },
     { productId: "prod_2", name: "Mouse", units: 5, salesCents: 10000 },
+  ]);
+});
+
+test("getTopProducts() groups by product id alone, so a renamed product is one row", async () => {
+  db.set([]);
+  await getTopProducts(SINCE, 10);
+
+  // Agrupar por `(product_id, product_name)` partiría en dos barras el mismo
+  // producto si se renombró entre dos compras: el grupo es solo el id.
+  assert.deepEqual(db.argsFor("groupBy"), [orderItem.productId]);
+});
+
+test("getTopProducts() takes the name from the most recent paid order of each product", async () => {
+  db.set([]);
+  await getTopProducts(SINCE, 10);
+
+  const selection = db.argsFor("select")?.[0] as Record<string, SQL>;
+  const name = dialect.sqlToQuery(selection.name).sql.toLowerCase();
+
+  assert.ok(name.includes('array_agg("order_items"."product_name"'));
+  assert.ok(name.includes('order by "orders"."created_at" desc'));
+  assert.ok(name.trimEnd().endsWith(")[1]"));
+});
+
+test("getTopProducts() maps the deduplicated row of a renamed product", async () => {
+  // Fila tal y como la devuelve el `group by`: las dos compras (con los dos
+  // nombres) ya colapsaron en un único producto con el nombre más reciente.
+  db.set([
+    {
+      productId: "prod_1",
+      name: "Teclado Pro",
+      units: "7",
+      salesCents: "35000",
+    },
+  ]);
+
+  assert.deepEqual(await getTopProducts(SINCE, 10), [
+    { productId: "prod_1", name: "Teclado Pro", units: 7, salesCents: 35000 },
   ]);
 });
 
