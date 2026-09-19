@@ -95,7 +95,7 @@ export function AdminOrdersTable() {
             columns={columns}
             data={ordersQuery.data?.items ?? EMPTY_ORDERS}
             isLoading={ordersQuery.isPending}
-            searchPlaceholder="Buscar por cliente..."
+            searchPlaceholder="Filtrar los resultados cargados..."
             emptyMessage="No hay pedidos para estos filtros."
           />
         </>

@@ -62,7 +62,6 @@ export const adminOrderFiltersSchema = z
     { message: RANGE_ORDER_MESSAGE, path: ["to"] },
   );
 
-export type AdminOrderFiltersInput = z.input<typeof adminOrderFiltersSchema>;
 export type AdminOrderFiltersQuery = z.infer<typeof adminOrderFiltersSchema>;
 
 /**

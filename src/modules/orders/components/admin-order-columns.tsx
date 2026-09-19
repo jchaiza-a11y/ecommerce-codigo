@@ -1,5 +1,3 @@
-"use client";
-
 import { createColumnHelper } from "@tanstack/react-table";
 
 import type { DataTableFeatures } from "@/components/shared/data-table";

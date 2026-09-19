@@ -1,5 +1,3 @@
-"use client";
-
 import { Receipt } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
