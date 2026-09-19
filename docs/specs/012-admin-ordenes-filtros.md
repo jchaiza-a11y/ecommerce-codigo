@@ -1,7 +1,7 @@
 ---
 id: 012
 title: Administración de pedidos — listado con filtros y detalle
-status: in-review
+status: done
 module: orders
 scope: admin
 ---
@@ -38,19 +38,19 @@ No incluye:
 - Lo que cubren 013 (inventario) y 014 (finanzas).
 
 ## Criterios de aceptación
-- [ ] AC1 — Dado un admin con `orders.view`, cuando abre `/admin/orders`, entonces ve los pedidos de los últimos 90 días de **todos** los estados, del más reciente al más antiguo.
-- [ ] AC2 — Dado un usuario sin `orders.view`, cuando entra a `/admin/orders`, entonces `proxy.ts` lo desvía a `/admin/forbidden`; y `GET /api/admin/orders` responde 403 (401 sin sesión) sin filtrar datos.
-- [ ] AC3 — Dado un usuario sin `orders.view`, cuando se pinta la barra lateral, entonces el ítem "Pedidos" no aparece.
-- [ ] AC4 — Dado el filtro de estado en `paid`, entonces solo vuelven pedidos `paid`; sin filtro vuelven los cuatro estados.
-- [ ] AC5 — Dado el texto `ana` en el filtro de cliente, entonces vuelven los pedidos cuyo `users.first_name`, `last_name` o `email` contengan `ana` sin distinguir mayúsculas (coincidencia parcial).
-- [ ] AC6 — Dado un rango `from`/`to`, entonces el filtro se aplica en SQL sobre `created_at` como intervalo `[from, to)`; sin fechas, la ventana es de 90 días hacia atrás.
-- [ ] AC7 — Dados varios filtros activos, entonces se combinan con AND en una sola consulta.
-- [ ] AC8 — Dado un resultado que alcanza las 500 filas, entonces la UI avisa de que hay más y pide acotar el periodo; nunca se devuelven más de 500.
-- [ ] AC9 — Dado un pedido de la tabla, cuando el admin abre su detalle, entonces ve nombre y email del cliente, estado, fecha, cada línea con `product_name` congelado, cantidad y precio unitario, y el total leído de `orders.total_cents` (no recalculado).
-- [ ] AC10 — Dado un pedido `paid`, entonces el detalle ofrece "Ver boleta" hacia el `receipt_url` de Stripe; si Stripe aún no la expone se informa sin romper; un pedido no pagado no muestra el botón.
-- [ ] AC11 — Dados query params inválidos, entonces el endpoint responde 400 con los `issues` de Zod y no consulta la base.
-- [ ] AC12 — Dado el estado de carga hay skeletons; dado un fallo de red hay mensaje y "Reintentar"; dado 0 resultados hay estado vacío.
-- [ ] AC13 — Dados importes en centavos, entonces se muestran con `formatPrice()`; sin decimales en ningún cálculo.
+- [x] AC1 — Dado un admin con `orders.view`, cuando abre `/admin/orders`, entonces ve los pedidos de los últimos 90 días de **todos** los estados, del más reciente al más antiguo.
+- [x] AC2 — Dado un usuario sin `orders.view`, cuando entra a `/admin/orders`, entonces `proxy.ts` lo desvía a `/admin/forbidden`; y `GET /api/admin/orders` responde 403 (401 sin sesión) sin filtrar datos.
+- [x] AC3 — Dado un usuario sin `orders.view`, cuando se pinta la barra lateral, entonces el ítem "Pedidos" no aparece.
+- [x] AC4 — Dado el filtro de estado en `paid`, entonces solo vuelven pedidos `paid`; sin filtro vuelven los cuatro estados.
+- [x] AC5 — Dado el texto `ana` en el filtro de cliente, entonces vuelven los pedidos cuyo `users.first_name`, `last_name` o `email` contengan `ana` sin distinguir mayúsculas (coincidencia parcial).
+- [x] AC6 — Dado un rango `from`/`to`, entonces el filtro se aplica en SQL sobre `created_at` como intervalo `[from, to)`; sin fechas, la ventana es de 90 días hacia atrás.
+- [x] AC7 — Dados varios filtros activos, entonces se combinan con AND en una sola consulta.
+- [x] AC8 — Dado un resultado que alcanza las 500 filas, entonces la UI avisa de que hay más y pide acotar el periodo; nunca se devuelven más de 500.
+- [x] AC9 — Dado un pedido de la tabla, cuando el admin abre su detalle, entonces ve nombre y email del cliente, estado, fecha, cada línea con `product_name` congelado, cantidad y precio unitario, y el total leído de `orders.total_cents` (no recalculado).
+- [x] AC10 — Dado un pedido `paid`, entonces el detalle ofrece "Ver boleta" hacia el `receipt_url` de Stripe; si Stripe aún no la expone se informa sin romper; un pedido no pagado no muestra el botón.
+- [x] AC11 — Dados query params inválidos, entonces el endpoint responde 400 con los `issues` de Zod y no consulta la base.
+- [x] AC12 — Dado el estado de carga hay skeletons; dado un fallo de red hay mensaje y "Reintentar"; dado 0 resultados hay estado vacío.
+- [x] AC13 — Dados importes en centavos, entonces se muestran con `formatPrice()`; sin decimales en ningún cálculo.
 
 ## Datos
 **Sin cambios de esquema.** No hay migración: `orders`, `order_items` y `users` ya tienen
