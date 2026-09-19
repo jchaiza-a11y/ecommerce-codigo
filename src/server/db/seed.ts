@@ -91,6 +91,12 @@ const PERMISSION_CATALOG: Record<
     description: "Asignar roles a los usuarios",
   },
 
+  "orders.view": {
+    resource: "orders",
+    action: "view",
+    description: "Ver los pedidos y su detalle",
+  },
+
   "roles.view": {
     resource: "roles",
     action: "view",
@@ -156,6 +162,7 @@ const ROLE_PERMISSION_MATRIX: Record<RoleSlug, readonly PermissionCode[]> = {
     "users.create",
     "users.update",
     "users.assign_roles",
+    "orders.view",
     "roles.view",
     "audit_logs.view",
   ],
@@ -165,6 +172,7 @@ const ROLE_PERMISSION_MATRIX: Record<RoleSlug, readonly PermissionCode[]> = {
     "products.update",
     "categories.view",
     "users.view",
+    "orders.view",
   ],
   audit: ["audit_logs.view"],
   employee: [],

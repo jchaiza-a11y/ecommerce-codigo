@@ -30,6 +30,8 @@ export const PERMISSIONS = {
   USERS_DEACTIVATE: "users.deactivate",
   USERS_ASSIGN_ROLES: "users.assign_roles",
 
+  ORDERS_VIEW: "orders.view",
+
   ROLES_VIEW: "roles.view",
 
   AUDIT_LOGS_VIEW: "audit_logs.view",

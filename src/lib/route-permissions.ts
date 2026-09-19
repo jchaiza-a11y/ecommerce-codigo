@@ -17,9 +17,11 @@ const ADMIN_ROUTE_PERMISSIONS: ReadonlyArray<{
 }> = [
   { prefix: "/admin/products", permission: "products.view" },
   { prefix: "/admin/categories", permission: "categories.view" },
+  { prefix: "/admin/orders", permission: "orders.view" },
   { prefix: "/admin/users", permission: "users.view" },
   { prefix: "/admin/roles", permission: "roles.view" },
   { prefix: "/admin/audit-logs", permission: "audit_logs.view" },
+  { prefix: "/api/admin/orders", permission: "orders.view" },
   { prefix: "/api/admin/users", permission: "users.view" },
   { prefix: "/api/admin/roles", permission: "roles.view" },
   { prefix: "/api/admin/audit-logs", permission: "audit_logs.view" },
@@ -36,6 +38,7 @@ const ADMIN_SECTION_FALLBACKS: ReadonlyArray<{
 }> = [
   { path: "/admin/products", permission: "products.view" },
   { path: "/admin/categories", permission: "categories.view" },
+  { path: "/admin/orders", permission: "orders.view" },
   { path: "/admin/users", permission: "users.view" },
   { path: "/admin/roles", permission: "roles.view" },
   { path: "/admin/audit-logs", permission: "audit_logs.view" },
