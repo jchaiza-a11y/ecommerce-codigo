@@ -1,7 +1,7 @@
 ---
 id: 012
 title: Administración de pedidos — listado con filtros y detalle
-status: draft
+status: in-progress
 module: orders
 scope: admin
 ---
@@ -119,21 +119,21 @@ id, productName, unitPriceCents, quantity }[]`. `truncated` es `items.length ===
    autoservicio (con dueño en el `where`) y la admin (sin dueño, con permiso).
 
 ## Tareas
-- [ ] T1 — `ORDERS_VIEW: "orders.view"` en `PERMISSIONS` · `src/lib/permissions.ts`
-- [ ] T2 — Entrada en `PERMISSION_CATALOG` y alta en `admin` y `manager` de `ROLE_PERMISSION_MATRIX`; correr `npm run db:seed` · `src/server/db/seed.ts`
-- [ ] T3 — `/admin/orders` y `/api/admin/orders` en `ADMIN_ROUTE_PERMISSIONS` (antes del `/admin` genérico) y `/admin/orders` en `ADMIN_SECTION_FALLBACKS` · `src/lib/route-permissions.ts`
-- [ ] T4 — Test de las rutas nuevas · `src/lib/route-permissions.test.ts`
-- [ ] T5 — `requiredPermission: "orders.view"` en el ítem "Pedidos" y comentario acotado a "Clientes" · `src/components/shared/admin-sidebar.tsx`
-- [ ] T6 — `adminOrderFiltersSchema` + tipos de salida + `DEFAULT_RANGE_DAYS` · `src/modules/orders/schemas/admin-order.schema.ts`
-- [ ] T7 — Tests del schema (rango invertido, estado desconocido, texto vacío) · `…/admin-order.schema.test.ts`
-- [ ] T8 — `AdminOrderFilters` + `findAdminOrders()`: join a `users`, `ilike` sobre nombre/email, `[from, to)`, estado exacto, `limit ADMIN_ORDER_LIMIT = 500`, `count` de líneas · `src/server/repositories/order.repository.ts`
-- [ ] T9 — `findById(orderId)` (cabecera sin líneas, para la boleta admin) · mismo archivo
-- [ ] T10 — Tests de T8/T9 con `mockDbQuery()` · `src/server/repositories/order.repository.test.ts`
-- [ ] T11 — Servicio `getAdminOrderDetail(orderId)`: `findWithItems` + `userRepository.findById` → `AdminOrderDetail | null` · `src/server/services/admin-order.service.ts`
-- [ ] T12 — Extraer el helper Stripe y añadir `resolveAdminOrderReceiptUrl(orderId)` (sin chequeo de dueño, solo `status === "paid"`) · `src/server/services/order-receipt.service.ts` (+ su test)
-- [ ] T13 — Route Handler del listado: guard → Zod → repositorio → `{ items, truncated }` · `src/app/api/admin/orders/route.ts`
-- [ ] T14 — Route Handler del detalle (404 si no existe) · `src/app/api/admin/orders/[orderId]/route.ts`
-- [ ] T15 — Route Handler de la boleta (404 / 502) · `src/app/api/admin/orders/[orderId]/receipt/route.ts`
+- [x] T1 — `ORDERS_VIEW: "orders.view"` en `PERMISSIONS` · `src/lib/permissions.ts`
+- [x] T2 — Entrada en `PERMISSION_CATALOG` y alta en `admin` y `manager` de `ROLE_PERMISSION_MATRIX`; correr `npm run db:seed` · `src/server/db/seed.ts`
+- [x] T3 — `/admin/orders` y `/api/admin/orders` en `ADMIN_ROUTE_PERMISSIONS` (antes del `/admin` genérico) y `/admin/orders` en `ADMIN_SECTION_FALLBACKS` · `src/lib/route-permissions.ts`
+- [x] T4 — Test de las rutas nuevas · `src/lib/route-permissions.test.ts`
+- [x] T5 — `requiredPermission: "orders.view"` en el ítem "Pedidos" y comentario acotado a "Clientes" · `src/components/shared/admin-sidebar.tsx`
+- [x] T6 — `adminOrderFiltersSchema` + tipos de salida + `DEFAULT_RANGE_DAYS` · `src/modules/orders/schemas/admin-order.schema.ts`
+- [x] T7 — Tests del schema (rango invertido, estado desconocido, texto vacío) · `…/admin-order.schema.test.ts`
+- [x] T8 — `AdminOrderFilters` + `findAdminOrders()`: join a `users`, `ilike` sobre nombre/email, `[from, to)`, estado exacto, `limit ADMIN_ORDER_LIMIT = 500`, `count` de líneas · `src/server/repositories/order.repository.ts`
+- [x] T9 — `findById(orderId)` (cabecera sin líneas, para la boleta admin) · mismo archivo
+- [x] T10 — Tests de T8/T9 con `mockDbQuery()` · `src/server/repositories/order.repository.test.ts`
+- [x] T11 — Servicio `getAdminOrderDetail(orderId)`: `findWithItems` + `userRepository.findById` → `AdminOrderDetail | null` · `src/server/services/admin-order.service.ts`
+- [x] T12 — Extraer el helper Stripe y añadir `resolveAdminOrderReceiptUrl(orderId)` (sin chequeo de dueño, solo `status === "paid"`) · `src/server/services/order-receipt.service.ts` (+ su test)
+- [x] T13 — Route Handler del listado: guard → Zod → repositorio → `{ items, truncated }` · `src/app/api/admin/orders/route.ts`
+- [x] T14 — Route Handler del detalle (404 si no existe) · `src/app/api/admin/orders/[orderId]/route.ts`
+- [x] T15 — Route Handler de la boleta (404 / 502) · `src/app/api/admin/orders/[orderId]/receipt/route.ts`
 - [ ] T16 — Service axios: `getAdminOrders`, `getAdminOrderDetail`, `getAdminOrderReceipt` (con `toQueryParams`) · `src/modules/orders/services/admin-order.service.ts` (+ test)
 - [ ] T17 — `adminOrderKeys`, `ORDER_STATUS_LABELS`/`ORDER_STATUS_OPTIONS` y `ADMIN_ORDER_LIMIT` · `src/modules/orders/constants.ts`
 - [ ] T18 — Hooks `useAdminOrders(filters)` y `useAdminOrderDetail(orderId)` (`enabled`) · `src/modules/orders/hooks/`
@@ -164,3 +164,22 @@ Verificación final: `npm run typecheck && npm run lint && npm run test` (el `bu
   día "hasta" quedará fuera.
 - **Sin auditoría.** Leer no muta: no se escribe en `audit_logs` (es append-only para
   mutaciones). Si el negocio pide trazar consultas, es otro spec.
+
+### Notas de implementación (T1–T15, backend)
+- `ADMIN_ORDER_LIMIT` y `DEFAULT_RANGE_DAYS` viven ambos en
+  `modules/orders/schemas/admin-order.schema.ts`, no en el repositorio: es el único
+  archivo que servidor y cliente pueden importar sin arrastrar Drizzle al bundle, y
+  §Decisiones 3 pide una sola fuente de verdad. **T17 los re-exporta desde
+  `constants.ts`, no los redefine.**
+- El schema exporta además `resolveAdminOrderRange(filters, now?)` (ventana por
+  defecto, pura y testeada) y `toAdminOrderCustomer(user)` (constructor del DTO de
+  cliente, compartido por listado y detalle).
+- `ORDER_STATUS_VALUES` replica el pgEnum desde un `Record<OrderStatus, true>`: la
+  exhaustividad la vigila el typecheck sin importar `orderStatus.enumValues` (runtime
+  de Drizzle) en el cliente. T17 puede tipar `ORDER_STATUS_LABELS` contra él.
+- Fallout de T1 no listado: `modules/roles/constants/permission-labels.ts` es un
+  `Record<PermissionCode, string>` y exigía la etiqueta de `orders.view` para compilar.
+- `customer=""` se rechaza con 400 en vez de ignorarse (a diferencia del `.catch()` de
+  la bitácora): T16 debe omitir los filtros vacíos con `toQueryParams`.
+- `getAdminOrderDetail()` lanza —no devuelve `null`— si `orders.user_id` no resuelve:
+  es una inconsistencia de datos (FK notNull), no un 404, y el handler la traduce a 500.
