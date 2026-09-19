@@ -1,11 +1,17 @@
-import { and, asc, desc, eq, gte, lt } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, ilike, lt, or } from "drizzle-orm";
 
+import {
+  ADMIN_ORDER_LIMIT,
+  toAdminOrderCustomer,
+  type AdminOrderCustomer,
+} from "@/modules/orders/schemas/admin-order.schema";
 import { db } from "@/server/db";
 import { runBatch, type PgStatement } from "@/server/db/batch";
 import { order } from "@/server/db/schema/order";
-import type { NewOrder, Order } from "@/server/db/schema/order";
+import type { NewOrder, Order, OrderStatus } from "@/server/db/schema/order";
 import { orderItem } from "@/server/db/schema/order-item";
 import type { NewOrderItem, OrderItem } from "@/server/db/schema/order-item";
+import { user } from "@/server/db/schema/user";
 
 /** Línea tal como la recibe el repositorio: el `orderId` lo pone él. */
 export type NewOrderItemData = Omit<NewOrderItem, "id" | "orderId">;
@@ -60,6 +66,17 @@ export async function findWithItems(
   }
 
   return { ...first.order, items: rows.map((row) => row.item) };
+}
+
+/** Cabecera suelta, sin líneas ni dueño en el `where`: la usa el panel (012 T9). */
+export async function findById(orderId: string): Promise<Order | undefined> {
+  const [found] = await db
+    .select()
+    .from(order)
+    .where(eq(order.id, orderId))
+    .limit(1);
+
+  return found;
 }
 
 /** Autoservicio: la propiedad del pedido es parte del `where`, no un chequeo aparte. */
@@ -138,6 +155,85 @@ export async function findHistoryByUserId({
   }
 
   return [...grouped.values()];
+}
+
+export type AdminOrderFilters = {
+  from: Date;
+  /** Exclusivo: el intervalo es `[from, to)` (012 §Notas, zona horaria). */
+  to: Date;
+  /** Estado exacto; sin él vuelven los cuatro. */
+  status?: OrderStatus;
+  /** Texto libre contra nombre, apellido o email del cliente. */
+  customer?: string;
+};
+
+/** Fila del listado admin: el cliente y el nº de líneas llegan ya resueltos. */
+export type AdminOrderListRow = Order & {
+  itemCount: number;
+  customer: AdminOrderCustomer;
+};
+
+/**
+ * Listado del panel con los tres filtros resueltos en SQL (012 §Decisiones 2).
+ *
+ * `itemCount` sale de un agregado en la misma consulta, nunca de una query por
+ * fila (§Notas, N+1), y el join a `order_items` es `LEFT` para que un pedido
+ * sin líneas siga apareciendo con 0 en vez de desaparecer del listado.
+ *
+ * `group by` sobre las dos PK basta en Postgres: el resto de columnas de
+ * `orders` y `users` depende funcionalmente de ellas.
+ *
+ * El `ilike '%texto%'` no usa índice; es aceptable porque el rango de fechas
+ * acota primero (§Notas). No se introduce `pg_trgm` sin medición.
+ */
+export async function findAdminOrders({
+  from,
+  to,
+  status,
+  customer,
+}: AdminOrderFilters): Promise<AdminOrderListRow[]> {
+  const pattern = customer ? `%${customer}%` : undefined;
+
+  const rows = await db
+    .select({
+      order,
+      customerId: user.id,
+      customerFirstName: user.firstName,
+      customerLastName: user.lastName,
+      customerEmail: user.email,
+      itemCount: count(orderItem.id),
+    })
+    .from(order)
+    .innerJoin(user, eq(user.id, order.userId))
+    .leftJoin(orderItem, eq(orderItem.orderId, order.id))
+    .where(
+      and(
+        gte(order.createdAt, from),
+        lt(order.createdAt, to),
+        status ? eq(order.status, status) : undefined,
+        pattern
+          ? or(
+              ilike(user.firstName, pattern),
+              ilike(user.lastName, pattern),
+              ilike(user.email, pattern),
+            )
+          : undefined,
+      ),
+    )
+    .groupBy(order.id, user.id)
+    .orderBy(desc(order.createdAt))
+    .limit(ADMIN_ORDER_LIMIT);
+
+  return rows.map((row) => ({
+    ...row.order,
+    itemCount: row.itemCount,
+    customer: toAdminOrderCustomer({
+      id: row.customerId,
+      firstName: row.customerFirstName,
+      lastName: row.customerLastName,
+      email: row.customerEmail,
+    }),
+  }));
 }
 
 /**

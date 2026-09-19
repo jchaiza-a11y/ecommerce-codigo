@@ -14,11 +14,40 @@ const {
   createWithItems,
   findByStripeCheckoutSessionId,
   findWithItems,
+  findById,
   findByIdAndUserId,
   findHistoryByUserId,
+  findAdminOrders,
   buildMarkPaid,
   buildMarkFailed,
 } = await import("@/server/repositories/order.repository.ts");
+
+const { ADMIN_ORDER_LIMIT } = await import(
+  "@/modules/orders/schemas/admin-order.schema.ts"
+);
+
+const RANGE = { from: new Date("2026-01-01"), to: new Date("2026-04-01") };
+
+/**
+ * Las condiciones de Drizzle referencian columnas que apuntan de vuelta a su
+ * tabla, así que `JSON.stringify` a secas revienta por ciclo. Solo se inspecciona
+ * para comprobar valores que el repositorio arma (el patrón `%…%`), nunca la SQL.
+ */
+function dumpCondition(condition: unknown): string {
+  const seen = new WeakSet<object>();
+
+  return JSON.stringify(condition, (_key, value: unknown) => {
+    if (typeof value === "object" && value !== null) {
+      if (seen.has(value)) {
+        return undefined;
+      }
+
+      seen.add(value);
+    }
+
+    return value;
+  });
+}
 
 test.beforeEach(() => {
   db.resetCalls();
@@ -127,6 +156,72 @@ test("findHistoryByUserId() returns [] when there is nothing in range", async ()
     await findHistoryByUserId({ userId: "user_1", from: new Date(0), to: new Date() }),
     [],
   );
+});
+
+test("findById() returns undefined when the order doesn't exist", async () => {
+  db.set([]);
+  assert.equal(await findById("order_missing"), undefined);
+});
+
+test("findById() returns the header without checking ownership", async () => {
+  db.set([{ id: "order_1", userId: "user_9", status: "paid" }]);
+  assert.deepEqual(await findById("order_1"), {
+    id: "order_1",
+    userId: "user_9",
+    status: "paid",
+  });
+});
+
+test("findAdminOrders() flattens the joined row into order + customer + itemCount", async () => {
+  db.set([
+    {
+      order: { id: "order_1", status: "paid", totalCents: 1000 },
+      customerId: "user_1",
+      customerFirstName: "Ana",
+      customerLastName: "Pérez",
+      customerEmail: "ana@example.com",
+      itemCount: 3,
+    },
+  ]);
+
+  assert.deepEqual(await findAdminOrders(RANGE), [
+    {
+      id: "order_1",
+      status: "paid",
+      totalCents: 1000,
+      itemCount: 3,
+      customer: { id: "user_1", name: "Ana Pérez", email: "ana@example.com" },
+    },
+  ]);
+});
+
+test("findAdminOrders() returns [] when nothing matches the filters", async () => {
+  db.set([]);
+  assert.deepEqual(await findAdminOrders(RANGE), []);
+});
+
+test("findAdminOrders() caps the query at ADMIN_ORDER_LIMIT rows", async () => {
+  db.set([]);
+  await findAdminOrders(RANGE);
+
+  assert.deepEqual(db.argsFor("limit"), [ADMIN_ORDER_LIMIT]);
+});
+
+test("findAdminOrders() wraps the customer text in a %…% pattern", async () => {
+  db.set([]);
+  await findAdminOrders({ ...RANGE, customer: "ana" });
+
+  assert.ok(
+    dumpCondition(db.argsFor("where")).includes("%ana%"),
+    "el patrón ilike debería ir entre comodines",
+  );
+});
+
+test("findAdminOrders() builds no customer condition when the filter is absent", async () => {
+  db.set([]);
+  await findAdminOrders(RANGE);
+
+  assert.ok(!dumpCondition(db.argsFor("where")).includes("%"));
 });
 
 test("buildMarkPaid() sets status to paid and keeps the payment intent id", () => {
