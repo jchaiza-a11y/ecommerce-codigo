@@ -39,7 +39,7 @@ let sessionsCreate = async (_params: unknown): Promise<Record<string, unknown>> 
   url: "https://checkout.stripe.com/cs_1",
 });
 let sessionsRetrieve = async (_id: string, _opts: unknown): Promise<unknown> => ({});
-let paymentMethodsUpdate = async (_id: string, _opts: unknown) => ({});
+const paymentMethodsUpdate = async (_id: string, _opts: unknown) => ({});
 let paymentMethodsDetach = async (_id: string) => ({});
 
 mockStripe({

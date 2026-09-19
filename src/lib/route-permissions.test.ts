@@ -38,6 +38,10 @@ test("matches the API admin subpath equivalents", () => {
   assert.equal(getRequiredPermission("/api/admin/roles"), "roles.view");
 });
 
+test("guards the dashboard metrics endpoint with dashboard.view", () => {
+  assert.equal(getRequiredPermission("/api/admin/metrics"), "dashboard.view");
+});
+
 test("returns null for an empty permission set", () => {
   assert.equal(getFirstAllowedAdminPath([]), null);
 });
