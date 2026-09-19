@@ -1,7 +1,7 @@
 ---
 id: 012
 title: Administración de pedidos — listado con filtros y detalle
-status: in-progress
+status: in-review
 module: orders
 scope: admin
 ---
@@ -134,15 +134,15 @@ id, productName, unitPriceCents, quantity }[]`. `truncated` es `items.length ===
 - [x] T13 — Route Handler del listado: guard → Zod → repositorio → `{ items, truncated }` · `src/app/api/admin/orders/route.ts`
 - [x] T14 — Route Handler del detalle (404 si no existe) · `src/app/api/admin/orders/[orderId]/route.ts`
 - [x] T15 — Route Handler de la boleta (404 / 502) · `src/app/api/admin/orders/[orderId]/receipt/route.ts`
-- [ ] T16 — Service axios: `getAdminOrders`, `getAdminOrderDetail`, `getAdminOrderReceipt` (con `toQueryParams`) · `src/modules/orders/services/admin-order.service.ts` (+ test)
-- [ ] T17 — `adminOrderKeys`, `ORDER_STATUS_LABELS`/`ORDER_STATUS_OPTIONS` y `ADMIN_ORDER_LIMIT` · `src/modules/orders/constants.ts`
-- [ ] T18 — Hooks `useAdminOrders(filters)` y `useAdminOrderDetail(orderId)` (`enabled`) · `src/modules/orders/hooks/`
-- [ ] T19 — Hook `useAdminOrderReceipt(orderId)` calcado de 009 · `src/modules/orders/hooks/use-admin-order-receipt.ts`
-- [ ] T20 — Columnas de la tabla (fecha, cliente, estado con `Badge`, líneas, total, acción "Ver detalle") · `src/modules/orders/components/admin-order-columns.tsx`
-- [ ] T21 — Barra de filtros `draft`/`applied` (2 fechas, `Select` de estado, texto de cliente, Aplicar/Limpiar) · `src/modules/orders/components/admin-order-filters.tsx`
-- [ ] T22 — Diálogo de detalle con líneas, total y botón de boleta · `src/modules/orders/components/admin-order-detail-dialog.tsx`
-- [ ] T23 — Contenedor `"use client"`: filtros + `DataTable` + diálogo, con carga / error+reintentar / vacío / aviso de tope · `src/modules/orders/components/admin-orders-table.tsx`
-- [ ] T24 — Página Server Component con `requirePermissionInPage("orders.view")` · `src/app/(admin)/admin/orders/page.tsx`
+- [x] T16 — Service axios: `getAdminOrders`, `getAdminOrderDetail`, `getAdminOrderReceipt` (con `toQueryParams`) · `src/modules/orders/services/admin-order.service.ts` (+ test)
+- [x] T17 — `adminOrderKeys`, `ORDER_STATUS_LABELS`/`ORDER_STATUS_OPTIONS` y `ADMIN_ORDER_LIMIT` · `src/modules/orders/constants.ts`
+- [x] T18 — Hooks `useAdminOrders(filters)` y `useAdminOrderDetail(orderId)` (`enabled`) · `src/modules/orders/hooks/`
+- [x] T19 — Hook `useAdminOrderReceipt(orderId)` calcado de 009 · `src/modules/orders/hooks/use-admin-order-receipt.ts`
+- [x] T20 — Columnas de la tabla (fecha, cliente, estado con `Badge`, líneas, total, acción "Ver detalle") · `src/modules/orders/components/admin-order-columns.tsx`
+- [x] T21 — Barra de filtros `draft`/`applied` (2 fechas, `Select` de estado, texto de cliente, Aplicar/Limpiar) · `src/modules/orders/components/admin-order-filters.tsx`
+- [x] T22 — Diálogo de detalle con líneas, total y botón de boleta · `src/modules/orders/components/admin-order-detail-dialog.tsx`
+- [x] T23 — Contenedor `"use client"`: filtros + `DataTable` + diálogo, con carga / error+reintentar / vacío / aviso de tope · `src/modules/orders/components/admin-orders-table.tsx`
+- [x] T24 — Página Server Component con `requirePermissionInPage("orders.view")` · `src/app/(admin)/admin/orders/page.tsx`
 
 Verificación final: `npm run typecheck && npm run lint && npm run test` (el `build` lo corre el reviewer)
 
@@ -183,3 +183,27 @@ Verificación final: `npm run typecheck && npm run lint && npm run test` (el `bu
   la bitácora): T16 debe omitir los filtros vacíos con `toQueryParams`.
 - `getAdminOrderDetail()` lanza —no devuelve `null`— si `orders.user_id` no resuelve:
   es una inconsistencia de datos (FK notNull), no un 404, y el handler la traduce a 500.
+
+### Notas de implementación (T16–T24, frontend)
+- El filtro vacío se cae **dos veces**: `toAdminOrderQuery()` no compone un
+  `customer` en blanco y `toQueryParams()` del service descarta cualquier valor
+  vacío antes de armar el query string. Sin lo segundo, limpiar el campo de texto
+  devolvería el 400 deliberado del schema (§Notas de implementación T1–T15).
+- `AdminOrderQuery` (constants) es el contrato del cliente y se **deriva** de
+  `AdminOrderFiltersQuery`: solo `from`/`to` cambian de forma a texto ISO, porque
+  el `z.input` de un `z.coerce.date()` es `unknown` y no tipa ni el estado ni la
+  clave de caché.
+- `toAdminOrderQuery()` (puro y testeado en `constants.test.ts`) traduce la barra
+  de filtros: fechas civiles a instantes locales y `to` empujado al arranque del
+  día siguiente, porque el filtro SQL es `[from, to)`.
+- La barra propia sustituye a los `filters` de `DataTable` (exact-match); a
+  `DataTable` le quedan orden, paginación y búsqueda de la página ya filtrada, y
+  su `emptyMessage` cubre el estado vacío de AC12.
+- El diálogo recibe la fila del listado (cabecera instantánea) y solo va a la red
+  por las líneas y por la boleta; la boleta únicamente si `status === "paid"`, así
+  que un pedido no pagado no gasta una llamada a Stripe ni enseña el botón.
+- `ORDER_STATUS_VARIANTS` acompaña a `ORDER_STATUS_LABELS` en `constants.ts` (no
+  en las columnas, como el precedente de la bitácora) porque el badge lo pintan
+  tabla y diálogo.
+- `formatDateTime` se importa de `modules/audit-logs/constants` tal como pide
+  §Reutilizar, en vez de escribir un segundo formateador.
