@@ -1,10 +1,25 @@
-import { eq } from "drizzle-orm";
+import { and, asc, desc, eq, gte, lte, sql, sum } from "drizzle-orm";
+import type { PgColumn } from "drizzle-orm/pg-core";
 
 import { db } from "@/server/db";
 import type { PgStatement } from "@/server/db/batch";
-import { financeExpense } from "@/server/db/schema/finance-expense";
-import type { FinanceExpenseMetadata } from "@/server/db/schema/finance-expense";
-import { financeIncome } from "@/server/db/schema/finance-income";
+import {
+  financeExpense,
+  financeExpenseOrigin,
+} from "@/server/db/schema/finance-expense";
+import type {
+  FinanceExpense,
+  FinanceExpenseMetadata,
+  FinanceExpenseOrigin,
+} from "@/server/db/schema/finance-expense";
+import {
+  financeIncome,
+  financeIncomeOrigin,
+} from "@/server/db/schema/finance-income";
+import type {
+  FinanceIncome,
+  FinanceIncomeOrigin,
+} from "@/server/db/schema/finance-income";
 import {
   financeSettings,
   FINANCE_SETTINGS_ID,
@@ -150,4 +165,224 @@ export function buildShippingInsert(
       orderId: order.id,
     })
     .onConflictDoNothing();
+}
+
+/* -------------------------------------------------------------------------
+ * Lecturas del panel de Finanzas (015). Solo consultan: la ventana de fechas,
+ * el IGV y el relleno de la serie diaria los decide el servicio.
+ * ---------------------------------------------------------------------- */
+
+/**
+ * `sum()` llega como `string` (Postgres devuelve `numeric`/`bigint` y el driver
+ * no lo convierte) o como `null` cuando la agregación no vio ninguna fila. Todo
+ * este dominio son centavos enteros: se normaliza aquí para que nadie aguas
+ * abajo reciba `null` ni `NaN` (015 AC4).
+ */
+function toInteger(value: string | number | null | undefined): number {
+  const parsed = Number(value ?? 0);
+
+  return Number.isFinite(parsed) ? Math.trunc(parsed) : 0;
+}
+
+/** Rango sobre `occurred_at`: es la fecha del movimiento, no la de registro. */
+function occurredBetween(column: PgColumn, from?: Date, to?: Date) {
+  return and(
+    from ? gte(column, from) : undefined,
+    to ? lte(column, to) : undefined,
+  );
+}
+
+function toAmountsByOrigin<TOrigin extends string>(
+  origins: readonly TOrigin[],
+  rows: ReadonlyArray<{ origin: TOrigin; amountCents: string | null }>,
+): Record<TOrigin, number> {
+  const totals = Object.fromEntries(
+    origins.map((origin) => [origin, 0]),
+  ) as Record<TOrigin, number>;
+
+  for (const row of rows) {
+    totals[row.origin] = toInteger(row.amountCents);
+  }
+
+  return totals;
+}
+
+export type FinanceRangeTotals = {
+  incomeByOrigin: Record<FinanceIncomeOrigin, number>;
+  expenseByOrigin: Record<FinanceExpenseOrigin, number>;
+  /**
+   * Venta del rango sin respaldo de costo, agregada desde la `metadata` que
+   * cada fila `order_cogs` ya guarda (015 AC3). No se releen `order_items` ni
+   * `products`: el costo vigente hoy no es el que tenía el pedido al pagarse.
+   */
+  excludedSalesCents: number;
+};
+
+/** Suma del JSON de trazabilidad del COGS; `->>` devuelve texto, de ahí el cast. */
+const EXCLUDED_SALES_CENTS = sql<string>`sum((${financeExpense.metadata} ->> 'excludedSalesCents')::bigint)`;
+
+/**
+ * Totales del rango: ingresos y egresos por origen más la cobertura de costeo.
+ * Tres agregaciones independientes, de ahí el `Promise.all`.
+ */
+export async function getSummaryTotals(
+  rangeStart: Date,
+  rangeEnd: Date,
+): Promise<FinanceRangeTotals> {
+  const [incomeRows, expenseRows, [coverageRow]] = await Promise.all([
+    db
+      .select({
+        origin: financeIncome.origin,
+        amountCents: sum(financeIncome.amountCents),
+      })
+      .from(financeIncome)
+      .where(occurredBetween(financeIncome.occurredAt, rangeStart, rangeEnd))
+      .groupBy(financeIncome.origin),
+    db
+      .select({
+        origin: financeExpense.origin,
+        amountCents: sum(financeExpense.amountCents),
+      })
+      .from(financeExpense)
+      .where(occurredBetween(financeExpense.occurredAt, rangeStart, rangeEnd))
+      .groupBy(financeExpense.origin),
+    db
+      .select({ excludedSalesCents: EXCLUDED_SALES_CENTS })
+      .from(financeExpense)
+      .where(
+        and(
+          eq(financeExpense.origin, "order_cogs"),
+          occurredBetween(financeExpense.occurredAt, rangeStart, rangeEnd),
+        ),
+      ),
+  ]);
+
+  return {
+    incomeByOrigin: toAmountsByOrigin(
+      financeIncomeOrigin.enumValues,
+      incomeRows,
+    ),
+    expenseByOrigin: toAmountsByOrigin(
+      financeExpenseOrigin.enumValues,
+      expenseRows,
+    ),
+    excludedSalesCents: toInteger(coverageRow?.excludedSalesCents),
+  };
+}
+
+/** Un día con movimiento; los días sin ninguno no vienen en el resultado. */
+export type DailyAmount = {
+  /** Día UTC en formato `YYYY-MM-DD`. */
+  date: string;
+  amountCents: number;
+};
+
+export type DailyLedger = {
+  income: DailyAmount[];
+  expense: DailyAmount[];
+};
+
+/**
+ * `occurred_at` es `timestamptz`: un `date_trunc` a secas cortaría por la zona
+ * horaria de la sesión, así que el `at time zone 'utc'` fija la referencia. El
+ * formato se hace en SQL para no depender de cómo serialice el driver.
+ */
+function utcDay(column: PgColumn) {
+  return sql<string>`to_char(date_trunc('day', ${column} at time zone 'utc'), 'YYYY-MM-DD')`;
+}
+
+async function getDailyAmounts(
+  table: typeof financeIncome | typeof financeExpense,
+  rangeStart: Date,
+  rangeEnd: Date,
+): Promise<DailyAmount[]> {
+  const day = utcDay(table.occurredAt);
+
+  const rows = await db
+    .select({ date: day, amountCents: sum(table.amountCents) })
+    .from(table)
+    .where(occurredBetween(table.occurredAt, rangeStart, rangeEnd))
+    .groupBy(day)
+    .orderBy(asc(day));
+
+  return rows.map((row) => ({
+    date: row.date,
+    amountCents: toInteger(row.amountCents),
+  }));
+}
+
+/**
+ * Series diarias de ingreso y de egreso, ascendentes y **sin** los días sin
+ * movimiento: `GROUP BY` solo devuelve los días con filas y el relleno a 30
+ * puntos lo hace `fillMissingDays` en el servicio (015 AC5).
+ */
+export async function getDailyLedger(
+  rangeStart: Date,
+  rangeEnd: Date,
+): Promise<DailyLedger> {
+  const [income, expense] = await Promise.all([
+    getDailyAmounts(financeIncome, rangeStart, rangeEnd),
+    getDailyAmounts(financeExpense, rangeStart, rangeEnd),
+  ]);
+
+  return { income, expense };
+}
+
+/**
+ * Filtros de los dos listados. El `origin` no viaja al servidor: son pocas
+ * filas ya acotadas por rango y la tabla del panel filtra por columna sobre lo
+ * ya cargado, igual que la bitácora (015 §Notas).
+ */
+export type FinanceListFilters = {
+  from?: Date;
+  to?: Date;
+  limit: number;
+};
+
+/** Columnas comunes a los dos listados; el egreso añade su categoría propia. */
+type ListColumn =
+  "id" | "origin" | "amountCents" | "description" | "occurredAt" | "orderId";
+
+export type FinanceIncomeListItem = Pick<FinanceIncome, ListColumn>;
+
+export type FinanceExpenseListItem = Pick<
+  FinanceExpense,
+  ListColumn | "category"
+>;
+
+export async function getIncomeList(
+  filters: FinanceListFilters,
+): Promise<FinanceIncomeListItem[]> {
+  return db
+    .select({
+      id: financeIncome.id,
+      origin: financeIncome.origin,
+      amountCents: financeIncome.amountCents,
+      description: financeIncome.description,
+      occurredAt: financeIncome.occurredAt,
+      orderId: financeIncome.orderId,
+    })
+    .from(financeIncome)
+    .where(occurredBetween(financeIncome.occurredAt, filters.from, filters.to))
+    .orderBy(desc(financeIncome.occurredAt))
+    .limit(filters.limit);
+}
+
+export async function getExpenseList(
+  filters: FinanceListFilters,
+): Promise<FinanceExpenseListItem[]> {
+  return db
+    .select({
+      id: financeExpense.id,
+      origin: financeExpense.origin,
+      amountCents: financeExpense.amountCents,
+      description: financeExpense.description,
+      occurredAt: financeExpense.occurredAt,
+      orderId: financeExpense.orderId,
+      category: financeExpense.category,
+    })
+    .from(financeExpense)
+    .where(occurredBetween(financeExpense.occurredAt, filters.from, filters.to))
+    .orderBy(desc(financeExpense.occurredAt))
+    .limit(filters.limit);
 }
