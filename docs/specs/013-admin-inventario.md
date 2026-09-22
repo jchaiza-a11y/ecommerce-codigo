@@ -132,8 +132,8 @@ valida con `productIdSchema` (uuid) reutilizado de `modules/products/schemas`.
 - [x] T6 — `findInventory()`: join a `categories`, `deleted_at is null`, `order by stock asc, name asc`, proyección de seis columnas · `src/server/repositories/product.repository.ts`
 - [x] T7 — `buildStockIncrement(id, quantity)` y `buildLowStockThresholdUpdate(id, threshold)`, ambas `PgStatement` sin ejecutar y acotadas a `deleted_at is null` · mismo archivo
 - [x] T8 — Tests de T6/T7 con `mockDbQuery()` · `src/server/repositories/product.repository.test.ts`
-- [ ] T9 — `adjustStockSchema`, `updateThresholdSchema` y el tipo `InventoryItem` · `src/modules/inventory/schemas/inventory.schema.ts`
-- [ ] T10 — Tests del schema (0, negativo, decimal, tope) · `…/inventory.schema.test.ts`
+- [x] T9 — `adjustStockSchema`, `updateThresholdSchema` y el tipo `InventoryItem` · `src/modules/inventory/schemas/inventory.schema.ts`
+- [x] T10 — Tests del schema (0, negativo, decimal, tope) · `…/inventory.schema.test.ts`
 - [ ] T11 — Route Handler `GET /api/admin/inventory` · `src/app/api/admin/inventory/route.ts`
 - [ ] T12 — Route Handler `PATCH …/[productId]/stock`: guard → Zod → lectura previa → `runBatch([incremento, log])` → relectura · `src/app/api/admin/inventory/[productId]/stock/route.ts`
 - [ ] T13 — Route Handler `PATCH …/[productId]/threshold`, mismo patrón · `…/[productId]/threshold/route.ts`
