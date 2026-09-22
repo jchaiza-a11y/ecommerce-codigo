@@ -129,9 +129,9 @@ valida con `productIdSchema` (uuid) reutilizado de `modules/products/schemas`.
 - [x] T3 — `/admin/inventory` y `/api/admin/inventory` en `ADMIN_ROUTE_PERMISSIONS` (antes de `/admin`) y `/admin/inventory` en `ADMIN_SECTION_FALLBACKS` · `src/lib/route-permissions.ts`
 - [x] T4 — Test de las rutas nuevas · `src/lib/route-permissions.test.ts`
 - [x] T5 — Ítem "Inventario" con `requiredPermission: "products.view"`, tras "Productos" · `src/components/shared/admin-sidebar.tsx`
-- [ ] T6 — `findInventory()`: join a `categories`, `deleted_at is null`, `order by stock asc, name asc`, proyección de seis columnas · `src/server/repositories/product.repository.ts`
-- [ ] T7 — `buildStockIncrement(id, quantity)` y `buildLowStockThresholdUpdate(id, threshold)`, ambas `PgStatement` sin ejecutar y acotadas a `deleted_at is null` · mismo archivo
-- [ ] T8 — Tests de T6/T7 con `mockDbQuery()` · `src/server/repositories/product.repository.test.ts`
+- [x] T6 — `findInventory()`: join a `categories`, `deleted_at is null`, `order by stock asc, name asc`, proyección de seis columnas · `src/server/repositories/product.repository.ts`
+- [x] T7 — `buildStockIncrement(id, quantity)` y `buildLowStockThresholdUpdate(id, threshold)`, ambas `PgStatement` sin ejecutar y acotadas a `deleted_at is null` · mismo archivo
+- [x] T8 — Tests de T6/T7 con `mockDbQuery()` · `src/server/repositories/product.repository.test.ts`
 - [ ] T9 — `adjustStockSchema`, `updateThresholdSchema` y el tipo `InventoryItem` · `src/modules/inventory/schemas/inventory.schema.ts`
 - [ ] T10 — Tests del schema (0, negativo, decimal, tope) · `…/inventory.schema.test.ts`
 - [ ] T11 — Route Handler `GET /api/admin/inventory` · `src/app/api/admin/inventory/route.ts`

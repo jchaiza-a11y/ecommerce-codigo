@@ -19,6 +19,10 @@ const {
   update,
   remove,
   buildStockDecrement,
+  findInventory,
+  findInventoryById,
+  buildStockIncrement,
+  buildLowStockThresholdUpdate,
 } = await import("@/server/repositories/product.repository.ts");
 
 test.beforeEach(() => {
@@ -181,4 +185,91 @@ test("remove() returns undefined when the product was already gone", async () =>
 
 test("buildStockDecrement() does not throw and returns a pending statement", () => {
   assert.doesNotThrow(() => buildStockDecrement("prod_1", 2, "order_1"));
+});
+
+const INVENTORY_COLUMNS = [
+  "categoryName",
+  "id",
+  "isActive",
+  "lowStockThreshold",
+  "name",
+  "sku",
+  "stock",
+];
+
+test("findInventory() projects only the columns the inventory table paints", async () => {
+  db.set([]);
+  await findInventory();
+
+  const [projection] = db.argsFor("select") ?? [];
+
+  assert.deepEqual(
+    Object.keys(projection as Record<string, unknown>).sort(),
+    INVENTORY_COLUMNS,
+  );
+});
+
+test("findInventory() orders by stock first, then by name", async () => {
+  db.set([]);
+  await findInventory();
+
+  assert.equal((db.argsFor("orderBy") ?? []).length, 2);
+});
+
+test("findInventory() returns the rows already flat, without a category wrapper", async () => {
+  const row = {
+    id: "prod_1",
+    name: "Laptop",
+    sku: "LAP-001",
+    categoryName: "Laptops",
+    isActive: true,
+    stock: 0,
+    lowStockThreshold: 5,
+  };
+  db.set([row]);
+
+  assert.deepEqual(await findInventory(), [row]);
+});
+
+test("findInventoryById() returns undefined for a soft-deleted or missing product", async () => {
+  db.set([]);
+  assert.equal(await findInventoryById("missing"), undefined);
+});
+
+test("findInventoryById() reads a single row", async () => {
+  db.set([{ id: "prod_1" }]);
+  await findInventoryById("prod_1");
+
+  assert.deepEqual(db.argsFor("limit"), [1]);
+});
+
+test("buildStockIncrement() delegates the sum to SQL instead of computing it in JS", () => {
+  db.resetCalls();
+  buildStockIncrement("prod_1", 10);
+
+  const [values] = db.argsFor("set") ?? [];
+  const { stock } = values as { stock: unknown };
+
+  // Un número aquí significaría un `leer → sumar → escribir` en el handler, con
+  // su carrera (§Decisiones 5). Lo que debe viajar es la expresión SQL.
+  assert.equal(typeof stock, "object");
+  assert.notEqual(stock, null);
+});
+
+test("buildStockIncrement() does not throw and returns a pending statement", () => {
+  assert.doesNotThrow(() => buildStockIncrement("prod_1", 1));
+});
+
+test("buildLowStockThresholdUpdate() replaces the threshold with the plain integer", () => {
+  db.resetCalls();
+  buildLowStockThresholdUpdate("prod_1", 3);
+
+  assert.deepEqual(db.argsFor("set"), [{ lowStockThreshold: 3 }]);
+});
+
+test("buildLowStockThresholdUpdate() accepts 0 as a valid threshold", () => {
+  db.resetCalls();
+  buildLowStockThresholdUpdate("prod_1", 0);
+
+  assert.deepEqual(db.argsFor("set"), [{ lowStockThreshold: 0 }]);
 });
