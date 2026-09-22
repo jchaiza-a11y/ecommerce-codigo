@@ -11,6 +11,7 @@ import {
   Tags,
   Users,
   UsersRound,
+  Wallet,
 } from "lucide-react";
 
 import type { PermissionCode } from "@/lib/permissions";
@@ -58,6 +59,12 @@ const NAV_ITEMS: NavItem[] = [
     label: "Roles",
     icon: ShieldCheck,
     requiredPermission: "roles.view",
+  },
+  {
+    href: "/admin/finance",
+    label: "Finanzas",
+    icon: Wallet,
+    requiredPermission: "finance.view",
   },
   {
     href: "/admin/audit-logs",
