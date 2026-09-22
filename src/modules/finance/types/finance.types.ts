@@ -1,24 +1,26 @@
 // Imports de tipo: se borran en compilación, así el bundle de cliente nunca
 // arrastra `db` ni Drizzle a través de estos reexports.
-import type {
-  FinanceExpense,
-  FinanceExpenseOrigin,
-} from "@/server/db/schema/finance-expense";
+import type { FinanceExpenseOrigin } from "@/server/db/schema/finance-expense";
 import type { FinanceIncomeOrigin } from "@/server/db/schema/finance-income";
 import type {
+  FinanceExpenseCategory,
   FinanceExpenseListItem,
+  FinanceIncomeCategory,
   FinanceIncomeListItem,
 } from "@/server/repositories/finance.repository";
 
+/**
+ * Las categorías solo las llevan las filas manuales; las de pedido se clasifican
+ * por su origen (014 §Datos).
+ */
 export type {
+  FinanceExpenseCategory,
   FinanceExpenseListItem,
   FinanceExpenseOrigin,
+  FinanceIncomeCategory,
   FinanceIncomeListItem,
   FinanceIncomeOrigin,
 };
-
-/** Categoría de un egreso manual; los de pedido no la llevan (014 §Datos). */
-export type FinanceExpenseCategory = NonNullable<FinanceExpense["category"]>;
 
 /**
  * Payload de `GET /api/admin/finance/summary` (015 §API).

@@ -1,9 +1,18 @@
 "use client";
 
 import { createColumnHelper } from "@tanstack/react-table";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 
 import type { DataTableFeatures } from "@/components/shared/data-table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   formatDateTime,
   formatOrderReference,
@@ -26,12 +35,23 @@ function toConcept(row: FinanceIncomeListItem): string {
   return row.orderId ? formatOrderReference(row.orderId) : "—";
 }
 
+type IncomeColumnOptions = {
+  /** Sin `finance.manage` la columna de acciones ni se construye (AC8). */
+  canManage: boolean;
+  onEdit: (entry: FinanceIncomeListItem) => void;
+  onDelete: (entry: FinanceIncomeListItem) => void;
+};
+
 /**
- * Columnas de solo lectura del libro de ingresos (015 T15): las filas de origen
- * `order` son derivadas del pedido y no se editan, así que la tabla no ofrece
- * ninguna acción.
+ * Columnas del libro de ingresos (015 T15 · 016 T15). Las filas de origen
+ * `order` son derivadas del pedido y no se editan: solo las manuales muestran
+ * acciones, y solo para quien puede gestionarlas.
  */
-export function buildIncomeColumns() {
+export function buildIncomeColumns({
+  canManage,
+  onEdit,
+  onDelete,
+}: IncomeColumnOptions) {
   return helper.columns([
     helper.accessor("occurredAt", {
       header: "Fecha",
@@ -69,5 +89,52 @@ export function buildIncomeColumns() {
         </span>
       ),
     }),
+    ...(canManage
+      ? [
+          helper.display({
+            id: "actions",
+            header: "",
+            cell: ({ row }) => {
+              const entry = row.original;
+
+              // Un ingreso de pedido no se edita ni se borra: la fila no ofrece
+              // nada (AC5). El backend lo vuelve a impedir por su cuenta.
+              if (entry.origin !== "manual") {
+                return null;
+              }
+
+              return (
+                <div className="flex justify-end">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Acciones del ingreso"
+                      >
+                        <MoreHorizontal className="size-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                      <DropdownMenuItem onSelect={() => onEdit(entry)}>
+                        <Pencil className="size-4" />
+                        Editar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onSelect={() => onDelete(entry)}
+                      >
+                        <Trash2 className="size-4" />
+                        Eliminar
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              );
+            },
+          }),
+        ]
+      : []),
   ]);
 }

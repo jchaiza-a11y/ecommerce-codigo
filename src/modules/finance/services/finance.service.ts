@@ -1,5 +1,11 @@
 import { api } from "@/lib/axios";
-import type { FinanceListFiltersInput } from "@/modules/finance/schemas/finance.schema";
+import type {
+  CreateManualExpenseValues,
+  CreateManualIncomeValues,
+  FinanceListFiltersInput,
+  UpdateManualExpenseInput,
+  UpdateManualIncomeInput,
+} from "@/modules/finance/schemas/finance.schema";
 import type {
   FinanceExpenseListItem,
   FinanceIncomeListItem,
@@ -58,4 +64,63 @@ export async function getFinanceExpenses(
   );
 
   return data;
+}
+
+/* -------------------------------------------------------------------------
+ * CRUD manual (016 §API). Solo alcanza filas `origin: manual`: el servidor
+ * responde 404 si el id es de un movimiento derivado de un pedido.
+ * ---------------------------------------------------------------------- */
+
+export async function createFinanceIncome(
+  input: CreateManualIncomeValues,
+): Promise<FinanceIncomeListItem> {
+  const { data } = await api.post<FinanceIncomeListItem>(
+    `${RESOURCE}/income`,
+    input,
+  );
+
+  return data;
+}
+
+export async function updateFinanceIncome(
+  id: string,
+  input: UpdateManualIncomeInput,
+): Promise<FinanceIncomeListItem> {
+  const { data } = await api.patch<FinanceIncomeListItem>(
+    `${RESOURCE}/income/${id}`,
+    input,
+  );
+
+  return data;
+}
+
+export async function deleteFinanceIncome(id: string): Promise<void> {
+  await api.delete(`${RESOURCE}/income/${id}`);
+}
+
+export async function createFinanceExpense(
+  input: CreateManualExpenseValues,
+): Promise<FinanceExpenseListItem> {
+  const { data } = await api.post<FinanceExpenseListItem>(
+    `${RESOURCE}/expenses`,
+    input,
+  );
+
+  return data;
+}
+
+export async function updateFinanceExpense(
+  id: string,
+  input: UpdateManualExpenseInput,
+): Promise<FinanceExpenseListItem> {
+  const { data } = await api.patch<FinanceExpenseListItem>(
+    `${RESOURCE}/expenses/${id}`,
+    input,
+  );
+
+  return data;
+}
+
+export async function deleteFinanceExpense(id: string): Promise<void> {
+  await api.delete(`${RESOURCE}/expenses/${id}`);
 }

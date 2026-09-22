@@ -339,16 +339,23 @@ export type FinanceListFilters = {
   limit: number;
 };
 
-/** Columnas comunes a los dos listados; el egreso añade su categoría propia. */
+/**
+ * Columnas comunes a los dos listados. La categoría entra en los dos desde 016:
+ * el diálogo de edición precarga sus campos desde la fila ya listada, así que
+ * sin ella el `PATCH` no podría mostrar el valor actual (016 AC3).
+ */
 type ListColumn =
-  "id" | "origin" | "amountCents" | "description" | "occurredAt" | "orderId";
+  | "id"
+  | "origin"
+  | "amountCents"
+  | "description"
+  | "occurredAt"
+  | "orderId"
+  | "category";
 
 export type FinanceIncomeListItem = Pick<FinanceIncome, ListColumn>;
 
-export type FinanceExpenseListItem = Pick<
-  FinanceExpense,
-  ListColumn | "category"
->;
+export type FinanceExpenseListItem = Pick<FinanceExpense, ListColumn>;
 
 export async function getIncomeList(
   filters: FinanceListFilters,
@@ -361,6 +368,7 @@ export async function getIncomeList(
       description: financeIncome.description,
       occurredAt: financeIncome.occurredAt,
       orderId: financeIncome.orderId,
+      category: financeIncome.category,
     })
     .from(financeIncome)
     .where(occurredBetween(financeIncome.occurredAt, filters.from, filters.to))
@@ -385,4 +393,127 @@ export async function getExpenseList(
     .where(occurredBetween(financeExpense.occurredAt, filters.from, filters.to))
     .orderBy(desc(financeExpense.occurredAt))
     .limit(filters.limit);
+}
+
+/* -------------------------------------------------------------------------
+ * CRUD de las filas manuales (016). Solo alcanzan `origin = 'manual'`: las
+ * derivadas del pedido son el reflejo contable de la venta y no se tocan desde
+ * el panel (016 AC5). El filtro va en el `WHERE`, no en la UI: es la defensa
+ * real contra un `PATCH`/`DELETE` directo contra el id de una fila automática.
+ * ---------------------------------------------------------------------- */
+
+export type FinanceIncomeCategory = NonNullable<FinanceIncome["category"]>;
+export type FinanceExpenseCategory = NonNullable<FinanceExpense["category"]>;
+
+/**
+ * Alta manual. `origin` y `orderId` no viajan en el tipo: los fija el
+ * repositorio, así que un llamador no puede colar una fila de pedido por esta
+ * puerta. El `id` lo genera el handler porque `db.batch()` no devuelve filas y
+ * la bitácora necesita el `entityId` dentro del mismo batch.
+ */
+type NewManualEntry<TCategory extends string> = {
+  id: string;
+  amountCents: number;
+  category: TCategory;
+  occurredAt: Date;
+  description: string | null;
+  createdBy: string | null;
+};
+
+/** Edición parcial: solo los campos que el `PATCH` trae. */
+type ManualEntryChanges<TCategory extends string> = Partial<
+  Omit<NewManualEntry<TCategory>, "id" | "createdBy">
+>;
+
+export type NewManualIncome = NewManualEntry<FinanceIncomeCategory>;
+export type ManualIncomeChanges = ManualEntryChanges<FinanceIncomeCategory>;
+export type NewManualExpense = NewManualEntry<FinanceExpenseCategory>;
+export type ManualExpenseChanges = ManualEntryChanges<FinanceExpenseCategory>;
+
+/** Campos editables de una fila manual, tal como los necesita la bitácora. */
+export type ManualIncomeRow = Pick<
+  FinanceIncome,
+  "id" | "amountCents" | "category" | "occurredAt" | "description"
+>;
+
+export type ManualExpenseRow = Pick<
+  FinanceExpense,
+  "id" | "amountCents" | "category" | "occurredAt" | "description"
+>;
+
+export async function findManualIncomeById(
+  id: string,
+): Promise<ManualIncomeRow | null> {
+  const [found] = await db
+    .select({
+      id: financeIncome.id,
+      amountCents: financeIncome.amountCents,
+      category: financeIncome.category,
+      occurredAt: financeIncome.occurredAt,
+      description: financeIncome.description,
+    })
+    .from(financeIncome)
+    .where(and(eq(financeIncome.id, id), eq(financeIncome.origin, "manual")))
+    .limit(1);
+
+  return found ?? null;
+}
+
+export async function findManualExpenseById(
+  id: string,
+): Promise<ManualExpenseRow | null> {
+  const [found] = await db
+    .select({
+      id: financeExpense.id,
+      amountCents: financeExpense.amountCents,
+      category: financeExpense.category,
+      occurredAt: financeExpense.occurredAt,
+      description: financeExpense.description,
+    })
+    .from(financeExpense)
+    .where(and(eq(financeExpense.id, id), eq(financeExpense.origin, "manual")))
+    .limit(1);
+
+  return found ?? null;
+}
+
+/** Los seis `build*` viajan sin ejecutar, en el batch de su `audit_logs`. */
+export function buildManualIncomeInsert(entry: NewManualIncome): PgStatement {
+  return db.insert(financeIncome).values({ ...entry, origin: "manual" });
+}
+
+export function buildManualIncomeUpdate(
+  id: string,
+  changes: ManualIncomeChanges,
+): PgStatement {
+  return db
+    .update(financeIncome)
+    .set(changes)
+    .where(and(eq(financeIncome.id, id), eq(financeIncome.origin, "manual")));
+}
+
+export function buildManualIncomeDelete(id: string): PgStatement {
+  return db
+    .delete(financeIncome)
+    .where(and(eq(financeIncome.id, id), eq(financeIncome.origin, "manual")));
+}
+
+export function buildManualExpenseInsert(entry: NewManualExpense): PgStatement {
+  return db.insert(financeExpense).values({ ...entry, origin: "manual" });
+}
+
+export function buildManualExpenseUpdate(
+  id: string,
+  changes: ManualExpenseChanges,
+): PgStatement {
+  return db
+    .update(financeExpense)
+    .set(changes)
+    .where(and(eq(financeExpense.id, id), eq(financeExpense.origin, "manual")));
+}
+
+export function buildManualExpenseDelete(id: string): PgStatement {
+  return db
+    .delete(financeExpense)
+    .where(and(eq(financeExpense.id, id), eq(financeExpense.origin, "manual")));
 }
