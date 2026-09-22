@@ -134,9 +134,9 @@ valida con `productIdSchema` (uuid) reutilizado de `modules/products/schemas`.
 - [x] T8 — Tests de T6/T7 con `mockDbQuery()` · `src/server/repositories/product.repository.test.ts`
 - [x] T9 — `adjustStockSchema`, `updateThresholdSchema` y el tipo `InventoryItem` · `src/modules/inventory/schemas/inventory.schema.ts`
 - [x] T10 — Tests del schema (0, negativo, decimal, tope) · `…/inventory.schema.test.ts`
-- [ ] T11 — Route Handler `GET /api/admin/inventory` · `src/app/api/admin/inventory/route.ts`
-- [ ] T12 — Route Handler `PATCH …/[productId]/stock`: guard → Zod → lectura previa → `runBatch([incremento, log])` → relectura · `src/app/api/admin/inventory/[productId]/stock/route.ts`
-- [ ] T13 — Route Handler `PATCH …/[productId]/threshold`, mismo patrón · `…/[productId]/threshold/route.ts`
+- [x] T11 — Route Handler `GET /api/admin/inventory` · `src/app/api/admin/inventory/route.ts`
+- [x] T12 — Route Handler `PATCH …/[productId]/stock`: guard → Zod → lectura previa → `runBatch([incremento, log])` → relectura · `src/app/api/admin/inventory/[productId]/stock/route.ts`
+- [x] T13 — Route Handler `PATCH …/[productId]/threshold`, mismo patrón · `…/[productId]/threshold/route.ts`
 - [ ] T14 — Service axios `getInventory`, `adjustStock`, `updateLowStockThreshold` · `src/modules/inventory/services/inventory.service.ts` (+ test)
 - [ ] T15 — `inventoryKeys`, `STOCK_STATUS_LABELS`/`_VARIANTS` y `getStockStatus(stock, threshold)` puro · `src/modules/inventory/constants.ts`
 - [ ] T16 — Tests de `getStockStatus` (frontera `stock === threshold`, `threshold = 0`) · `…/constants.test.ts`
