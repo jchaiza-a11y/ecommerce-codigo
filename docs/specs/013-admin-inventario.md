@@ -137,7 +137,7 @@ valida con `productIdSchema` (uuid) reutilizado de `modules/products/schemas`.
 - [x] T11 — Route Handler `GET /api/admin/inventory` · `src/app/api/admin/inventory/route.ts`
 - [x] T12 — Route Handler `PATCH …/[productId]/stock`: guard → Zod → lectura previa → `runBatch([incremento, log])` → relectura · `src/app/api/admin/inventory/[productId]/stock/route.ts`
 - [x] T13 — Route Handler `PATCH …/[productId]/threshold`, mismo patrón · `…/[productId]/threshold/route.ts`
-- [ ] T14 — Service axios `getInventory`, `adjustStock`, `updateLowStockThreshold` · `src/modules/inventory/services/inventory.service.ts` (+ test)
+- [x] T14 — Service axios `getInventory`, `adjustStock`, `updateLowStockThreshold` · `src/modules/inventory/services/inventory.service.ts` (+ test)
 - [ ] T15 — `inventoryKeys`, `STOCK_STATUS_LABELS`/`_VARIANTS` y `getStockStatus(stock, threshold)` puro · `src/modules/inventory/constants.ts`
 - [ ] T16 — Tests de `getStockStatus` (frontera `stock === threshold`, `threshold = 0`) · `…/constants.test.ts`
 - [ ] T17 — Hook `useInventory()` · `src/modules/inventory/hooks/use-inventory.ts`
