@@ -1,7 +1,7 @@
 ---
 id: 013
 title: Inventario — reposición de stock y umbral de alerta
-status: in-progress
+status: done
 module: inventory
 scope: admin
 ---
@@ -44,19 +44,19 @@ No incluye:
 - Lo que cubre 014 (finanzas).
 
 ## Criterios de aceptación
-- [ ] AC1 — Dado un admin con `products.view`, cuando abre `/admin/inventory`, entonces ve todos los productos no borrados ordenados por stock ascendente (los agotados primero).
-- [ ] AC2 — Dado `stock = 0` el badge es "Agotado"; dado `0 < stock <= lowStockThreshold` es "Stock bajo"; dado `stock > lowStockThreshold` es "OK".
-- [ ] AC3 — Dado el filtro "solo stock bajo" activo, entonces la tabla muestra únicamente agotados y bajo mínimos; desactivado, muestra todo.
-- [ ] AC4 — Dado un producto con stock 3 y cantidad 10, cuando el admin pulsa "Agregar", entonces el stock queda en 13 (suma, no reemplazo) y la fila se refresca sin recargar la página.
-- [ ] AC5 — Dada una cantidad 0, negativa, decimal o vacía, entonces el botón no dispara la petición y el endpoint responde 400 con los `issues` de Zod sin tocar la base.
-- [ ] AC6 — Dado un umbral entero `>= 0`, cuando el admin lo confirma, entonces se guarda y los badges se recalculan; un valor negativo o decimal se rechaza con 400.
-- [ ] AC7 — Dada una reposición correcta, entonces `audit_logs` recibe una fila `product.stock_adjusted` con `actorId`, `entityId` del producto y `changes = { before: { stock }, after: { stock } }` más `metadata.delta`.
-- [ ] AC8 — Dado un cambio de umbral, entonces `audit_logs` recibe `product.low_stock_threshold_updated` con `before`/`after`.
-- [ ] AC9 — Dado un fallo de la mutación, entonces **ni** el stock **ni** el log se escriben: ambas sentencias viajan en el mismo `db.batch`.
-- [ ] AC10 — Dado un usuario sin `products.view`, entonces `proxy.ts` lo desvía a `/admin/forbidden`, `GET /api/admin/inventory` responde 403 (401 sin sesión) y el ítem "Inventario" no aparece en la barra lateral.
-- [ ] AC11 — Dado un usuario con `products.view` pero sin `products.update`, entonces ve la tabla y los dos endpoints `PATCH` le responden 403.
-- [ ] AC12 — Dado un `productId` inexistente o borrado, entonces el `PATCH` responde 404.
-- [ ] AC13 — Dado el estado de carga hay skeletons; dado un fallo de red hay mensaje y reintento; dado 0 resultados hay estado vacío; toda mutación da feedback con `toast`.
+- [x] AC1 — Dado un admin con `products.view`, cuando abre `/admin/inventory`, entonces ve todos los productos no borrados ordenados por stock ascendente (los agotados primero).
+- [x] AC2 — Dado `stock = 0` el badge es "Agotado"; dado `0 < stock <= lowStockThreshold` es "Stock bajo"; dado `stock > lowStockThreshold` es "OK".
+- [x] AC3 — Dado el filtro "solo stock bajo" activo, entonces la tabla muestra únicamente agotados y bajo mínimos; desactivado, muestra todo.
+- [x] AC4 — Dado un producto con stock 3 y cantidad 10, cuando el admin pulsa "Agregar", entonces el stock queda en 13 (suma, no reemplazo) y la fila se refresca sin recargar la página.
+- [x] AC5 — Dada una cantidad 0, negativa, decimal o vacía, entonces el botón no dispara la petición y el endpoint responde 400 con los `issues` de Zod sin tocar la base.
+- [x] AC6 — Dado un umbral entero `>= 0`, cuando el admin lo confirma, entonces se guarda y los badges se recalculan; un valor negativo o decimal se rechaza con 400.
+- [x] AC7 — Dada una reposición correcta, entonces `audit_logs` recibe una fila `product.stock_adjusted` con `actorId`, `entityId` del producto y `changes = { before: { stock }, after: { stock } }` más `metadata.delta`.
+- [x] AC8 — Dado un cambio de umbral, entonces `audit_logs` recibe `product.low_stock_threshold_updated` con `before`/`after`.
+- [x] AC9 — Dado un fallo de la mutación, entonces **ni** el stock **ni** el log se escriben: ambas sentencias viajan en el mismo `db.batch`.
+- [x] AC10 — Dado un usuario sin `products.view`, entonces `proxy.ts` lo desvía a `/admin/forbidden`, `GET /api/admin/inventory` responde 403 (401 sin sesión) y el ítem "Inventario" no aparece en la barra lateral.
+- [x] AC11 — Dado un usuario con `products.view` pero sin `products.update`, entonces ve la tabla y los dos endpoints `PATCH` le responden 403.
+- [x] AC12 — Dado un `productId` inexistente o borrado, entonces el `PATCH` responde 404.
+- [x] AC13 — Dado el estado de carga hay skeletons; dado un fallo de red hay mensaje y reintento; dado 0 resultados hay estado vacío; toda mutación da feedback con `toast`.
 
 ## Datos
 **Sin cambios de esquema y sin migración.** `products.stock` (integer, notNull, default 0,
