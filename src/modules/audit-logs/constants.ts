@@ -29,6 +29,8 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
   "user.updated": "Datos de usuario actualizados",
   "user.activation_changed": "Estado de la cuenta cambiado",
   "user.roles_assigned": "Roles reasignados",
+  "product.stock_adjusted": "Stock repuesto desde inventario",
+  "product.low_stock_threshold_updated": "Umbral de stock bajo actualizado",
 };
 
 export function getAuditActionLabel(action: string): string {

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Boxes,
   LayoutDashboard,
   Package,
   ScrollText,
@@ -35,6 +36,12 @@ const NAV_ITEMS: NavItem[] = [
     href: "/admin/products",
     label: "Productos",
     icon: Package,
+    requiredPermission: "products.view",
+  },
+  {
+    href: "/admin/inventory",
+    label: "Inventario",
+    icon: Boxes,
     requiredPermission: "products.view",
   },
   {

@@ -1,7 +1,7 @@
 ---
 id: 013
 title: Inventario — reposición de stock y umbral de alerta
-status: draft
+status: in-progress
 module: inventory
 scope: admin
 ---
@@ -124,11 +124,11 @@ valida con `productIdSchema` (uuid) reutilizado de `modules/products/schemas`.
    `products`/`users`/`roles`; no necesita los filtros server-side que sí exigió 012.
 
 ## Tareas
-- [ ] T1 — `PRODUCT_STOCK_ADJUSTED` y `PRODUCT_LOW_STOCK_THRESHOLD_UPDATED` en `AUDIT_ACTIONS` · `src/lib/audit.ts`
-- [ ] T2 — Etiquetas de las dos acciones · `src/modules/audit-logs/constants.ts`
-- [ ] T3 — `/admin/inventory` y `/api/admin/inventory` en `ADMIN_ROUTE_PERMISSIONS` (antes de `/admin`) y `/admin/inventory` en `ADMIN_SECTION_FALLBACKS` · `src/lib/route-permissions.ts`
-- [ ] T4 — Test de las rutas nuevas · `src/lib/route-permissions.test.ts`
-- [ ] T5 — Ítem "Inventario" con `requiredPermission: "products.view"`, tras "Productos" · `src/components/shared/admin-sidebar.tsx`
+- [x] T1 — `PRODUCT_STOCK_ADJUSTED` y `PRODUCT_LOW_STOCK_THRESHOLD_UPDATED` en `AUDIT_ACTIONS` · `src/lib/audit.ts`
+- [x] T2 — Etiquetas de las dos acciones · `src/modules/audit-logs/constants.ts`
+- [x] T3 — `/admin/inventory` y `/api/admin/inventory` en `ADMIN_ROUTE_PERMISSIONS` (antes de `/admin`) y `/admin/inventory` en `ADMIN_SECTION_FALLBACKS` · `src/lib/route-permissions.ts`
+- [x] T4 — Test de las rutas nuevas · `src/lib/route-permissions.test.ts`
+- [x] T5 — Ítem "Inventario" con `requiredPermission: "products.view"`, tras "Productos" · `src/components/shared/admin-sidebar.tsx`
 - [ ] T6 — `findInventory()`: join a `categories`, `deleted_at is null`, `order by stock asc, name asc`, proyección de seis columnas · `src/server/repositories/product.repository.ts`
 - [ ] T7 — `buildStockIncrement(id, quantity)` y `buildLowStockThresholdUpdate(id, threshold)`, ambas `PgStatement` sin ejecutar y acotadas a `deleted_at is null` · mismo archivo
 - [ ] T8 — Tests de T6/T7 con `mockDbQuery()` · `src/server/repositories/product.repository.test.ts`

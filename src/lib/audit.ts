@@ -16,6 +16,8 @@ export const AUDIT_ACTIONS = {
   ROLES_ASSIGNED: "user.roles_assigned",
   ORDER_PAID: "order.paid",
   ORDER_PAYMENT_FAILED: "order.payment_failed",
+  PRODUCT_STOCK_ADJUSTED: "product.stock_adjusted",
+  PRODUCT_LOW_STOCK_THRESHOLD_UPDATED: "product.low_stock_threshold_updated",
 } as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];
