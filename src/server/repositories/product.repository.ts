@@ -354,6 +354,20 @@ export async function create(data: NewProduct): Promise<Product> {
   return created;
 }
 
+/**
+ * Misma actualización que `update`, sin ejecutar: la necesita todo llamador que
+ * deba auditar en la misma transacción que la mutación (CLAUDE.md §4.9), como
+ * el PATCH de costo de Finanzas (014). No devuelve la fila —dentro de un
+ * `batch` el `returning()` de una sentencia no alimenta a otra— así que el
+ * llamador parte del estado que ya leyó para comprobar la existencia.
+ */
+export function buildUpdate(id: string, data: UpdateProductData): PgStatement {
+  return db
+    .update(product)
+    .set(data)
+    .where(and(eq(product.id, id), isNull(product.deletedAt)));
+}
+
 export async function update(
   id: string,
   data: UpdateProductData,
