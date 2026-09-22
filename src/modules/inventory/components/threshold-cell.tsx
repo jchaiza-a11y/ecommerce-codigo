@@ -43,8 +43,18 @@ export function ThresholdCell({ item }: ThresholdCellProps) {
     );
   }
 
+  // Un input vaciado no es "0": sin esta distinción, borrar el campo por
+  // error confirmaría un umbral 0 en silencio (Number("") === 0 es válido
+  // para el schema).
+  const isEmpty = draft.trim() === "";
   const parsed = updateThresholdSchema.safeParse({ threshold: Number(draft) });
-  const showError = !parsed.success;
+  const isValid = !isEmpty && parsed.success;
+  const showError = !isValid;
+  const errorMessage = isEmpty
+    ? "Ingresá un umbral"
+    : !parsed.success
+      ? parsed.error.issues[0]?.message
+      : undefined;
 
   return (
     <form
@@ -52,7 +62,7 @@ export function ThresholdCell({ item }: ThresholdCellProps) {
       onSubmit={(event) => {
         event.preventDefault();
 
-        if (!parsed.success || updateThreshold.isPending) {
+        if (isEmpty || !parsed.success || updateThreshold.isPending) {
           return;
         }
 
@@ -95,7 +105,7 @@ export function ThresholdCell({ item }: ThresholdCellProps) {
           size="icon"
           className="size-7"
           aria-label="Guardar umbral"
-          disabled={!parsed.success || updateThreshold.isPending}
+          disabled={!isValid || updateThreshold.isPending}
         >
           <Check className="size-3.5" />
         </Button>
@@ -114,9 +124,7 @@ export function ThresholdCell({ item }: ThresholdCellProps) {
       </div>
 
       {showError ? (
-        <p className="text-xs text-destructive">
-          {parsed.error.issues[0]?.message}
-        </p>
+        <p className="text-xs text-destructive">{errorMessage}</p>
       ) : null}
     </form>
   );
