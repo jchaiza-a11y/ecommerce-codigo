@@ -19,6 +19,14 @@ const {
   getDailyLedger,
   getIncomeList,
   getExpenseList,
+  findManualIncomeById,
+  findManualExpenseById,
+  buildManualIncomeInsert,
+  buildManualIncomeUpdate,
+  buildManualIncomeDelete,
+  buildManualExpenseInsert,
+  buildManualExpenseUpdate,
+  buildManualExpenseDelete,
 } = await import("@/server/repositories/finance.repository.ts");
 
 const ORDER = { id: "order_1", totalCents: 12_000 };
@@ -368,4 +376,137 @@ test("getExpenseList() ordena por fecha descendente y respeta el límite", async
       '"finance_expense"."occurred_at" desc',
     ),
   );
+});
+
+test("los dos listados traen la categoría, que el diálogo de edición precarga", async () => {
+  for (const list of [getIncomeList, getExpenseList]) {
+    db.resetCalls();
+    db.set([]);
+    await list({ limit: 100 });
+
+    const selection = db.argsFor("select")?.[0] as Record<string, unknown>;
+
+    assert.ok("category" in selection);
+  }
+});
+
+/* --- CRUD manual (016) -------------------------------------------------- */
+
+const ENTRY_ID = "11111111-1111-4111-8111-111111111111";
+const OCCURRED_AT = new Date("2026-09-10T00:00:00.000Z");
+const ACTOR_ID = "22222222-2222-4222-8222-222222222222";
+
+test("buildManualIncomeInsert() fija el origen manual y no acepta un pedido", () => {
+  buildManualIncomeInsert({
+    id: ENTRY_ID,
+    amountCents: 4_500,
+    category: "venta_extra",
+    occurredAt: OCCURRED_AT,
+    description: "Venta en mostrador",
+    createdBy: ACTOR_ID,
+  });
+
+  assert.deepEqual(db.argsFor("values"), [
+    {
+      id: ENTRY_ID,
+      amountCents: 4_500,
+      category: "venta_extra",
+      occurredAt: OCCURRED_AT,
+      description: "Venta en mostrador",
+      createdBy: ACTOR_ID,
+      origin: "manual",
+    },
+  ]);
+});
+
+test("buildManualExpenseInsert() fija el origen manual y no acepta un pedido", () => {
+  buildManualExpenseInsert({
+    id: ENTRY_ID,
+    amountCents: 90_000,
+    category: "alquiler",
+    occurredAt: OCCURRED_AT,
+    description: null,
+    createdBy: ACTOR_ID,
+  });
+
+  const [values] = db.argsFor("values") as [Record<string, unknown>];
+
+  assert.equal(values.origin, "manual");
+  assert.equal(values.category, "alquiler");
+  assert.ok(!("orderId" in values));
+});
+
+test("buildManualIncomeUpdate() solo escribe los campos recibidos", () => {
+  buildManualIncomeUpdate(ENTRY_ID, { amountCents: 7_000 });
+
+  assert.deepEqual(db.argsFor("set"), [{ amountCents: 7_000 }]);
+});
+
+test("buildManualExpenseUpdate() solo escribe los campos recibidos", () => {
+  buildManualExpenseUpdate(ENTRY_ID, { category: "marketing" });
+
+  assert.deepEqual(db.argsFor("set"), [{ category: "marketing" }]);
+});
+
+/**
+ * AC5: la defensa contra editar o borrar una fila `order`/`order_cogs`/
+ * `order_shipping` está en el `WHERE`, no en la UI. El stub no ejecuta SQL, así
+ * que se comprueba sobre el fragmento renderizado: con `origin = 'manual'` en
+ * la condición, una fila automática nunca entra en el conjunto afectado
+ * aunque el cliente mande su id.
+ */
+test("update y delete manuales nunca alcanzan una fila derivada de un pedido", () => {
+  const builders = [
+    () => buildManualIncomeUpdate(ENTRY_ID, { amountCents: 1 }),
+    () => buildManualIncomeDelete(ENTRY_ID),
+    () => buildManualExpenseUpdate(ENTRY_ID, { amountCents: 1 }),
+    () => buildManualExpenseDelete(ENTRY_ID),
+  ];
+
+  for (const build of builders) {
+    db.resetCalls();
+    build();
+
+    const where = renderedCalls("where")[0];
+
+    assert.ok(where.sql.includes('"id" ='), `sin filtro por id: ${where.sql}`);
+    assert.ok(
+      where.sql.includes('"origin" ='),
+      `sin filtro por origen: ${where.sql}`,
+    );
+    assert.deepEqual(where.params, [ENTRY_ID, "manual"]);
+  }
+});
+
+test("los find manuales devuelven null cuando el id no es de una fila manual", async () => {
+  for (const find of [findManualIncomeById, findManualExpenseById]) {
+    db.set([]);
+
+    assert.equal(await find(ENTRY_ID), null);
+  }
+});
+
+test("los find manuales acotan la búsqueda al origen manual", async () => {
+  for (const find of [findManualIncomeById, findManualExpenseById]) {
+    db.resetCalls();
+    db.set([]);
+    await find(ENTRY_ID);
+
+    assert.deepEqual(renderedCalls("where")[0].params, [ENTRY_ID, "manual"]);
+    assert.deepEqual(db.argsFor("limit"), [1]);
+  }
+});
+
+test("findManualIncomeById() devuelve los campos que la bitácora necesita", async () => {
+  const row = {
+    id: ENTRY_ID,
+    amountCents: 4_500,
+    category: "venta_extra",
+    occurredAt: OCCURRED_AT,
+    description: null,
+  };
+
+  db.set([row]);
+
+  assert.deepEqual(await findManualIncomeById(ENTRY_ID), row);
 });

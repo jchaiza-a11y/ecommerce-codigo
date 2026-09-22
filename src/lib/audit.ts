@@ -21,6 +21,12 @@ export const AUDIT_ACTIONS = {
   // `order.paid` y por su propio `order_id` (014 §Notas).
   FINANCE_SETTINGS_UPDATED: "finance.settings_updated",
   FINANCE_PRODUCT_COST_UPDATED: "finance.product_cost_updated",
+  FINANCE_INCOME_CREATED: "finance.income_created",
+  FINANCE_INCOME_UPDATED: "finance.income_updated",
+  FINANCE_INCOME_DELETED: "finance.income_deleted",
+  FINANCE_EXPENSE_CREATED: "finance.expense_created",
+  FINANCE_EXPENSE_UPDATED: "finance.expense_updated",
+  FINANCE_EXPENSE_DELETED: "finance.expense_deleted",
 } as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];

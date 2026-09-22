@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useState, type ReactNode } from "react";
 
 import type { UseQueryResult } from "@tanstack/react-query";
 import type { ColumnDef, RowData } from "@tanstack/react-table";
@@ -32,6 +32,8 @@ type LedgerTableProps<TData extends RowData> = {
   errorTitle: string;
   searchPlaceholder: string;
   emptyMessage: string;
+  /** Acciones del listado (el alta manual de 016); vacío en solo lectura. */
+  actions?: ReactNode;
 };
 
 /**
@@ -52,71 +54,85 @@ export function LedgerTable<TData extends RowData>({
   errorTitle,
   searchPlaceholder,
   emptyMessage,
+  actions,
 }: LedgerTableProps<TData>) {
   const [draftRange, setDraftRange] = useState<LedgerRange>(EMPTY_RANGE);
   const fieldId = useId();
 
   if (query.isError) {
+    // Las acciones siguen visibles: dar de alta un movimiento no depende de que
+    // el listado haya cargado.
     return (
-      <FinanceError
-        title={errorTitle}
-        error={query.error}
-        onRetry={() => query.refetch()}
-        isRetrying={query.isFetching}
-      />
+      <div className="flex flex-col gap-4">
+        {actions ? <div className="flex justify-end">{actions}</div> : null}
+
+        <FinanceError
+          title={errorTitle}
+          error={query.error}
+          onRetry={() => query.refetch()}
+          isRetrying={query.isFetching}
+        />
+      </div>
     );
   }
 
   return (
     <div className="flex flex-col gap-4">
-      <form
-        className="flex flex-wrap items-end gap-3"
-        onSubmit={(event) => {
-          event.preventDefault();
-          onApplyRange(draftRange);
-        }}
-      >
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor={`${fieldId}-from`}>Desde</Label>
-          <Input
-            id={`${fieldId}-from`}
-            type="date"
-            className="w-44"
-            value={draftRange.from}
-            onChange={(event) =>
-              setDraftRange((range) => ({ ...range, from: event.target.value }))
-            }
-          />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor={`${fieldId}-to`}>Hasta</Label>
-          <Input
-            id={`${fieldId}-to`}
-            type="date"
-            className="w-44"
-            value={draftRange.to}
-            onChange={(event) =>
-              setDraftRange((range) => ({ ...range, to: event.target.value }))
-            }
-          />
-        </div>
-
-        <Button type="submit" variant="outline">
-          Aplicar fechas
-        </Button>
-
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={() => {
-            setDraftRange(EMPTY_RANGE);
-            onApplyRange(EMPTY_RANGE);
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <form
+          className="flex flex-wrap items-end gap-3"
+          onSubmit={(event) => {
+            event.preventDefault();
+            onApplyRange(draftRange);
           }}
         >
-          Limpiar
-        </Button>
-      </form>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor={`${fieldId}-from`}>Desde</Label>
+            <Input
+              id={`${fieldId}-from`}
+              type="date"
+              className="w-44"
+              value={draftRange.from}
+              onChange={(event) =>
+                setDraftRange((range) => ({
+                  ...range,
+                  from: event.target.value,
+                }))
+              }
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor={`${fieldId}-to`}>Hasta</Label>
+            <Input
+              id={`${fieldId}-to`}
+              type="date"
+              className="w-44"
+              value={draftRange.to}
+              onChange={(event) =>
+                setDraftRange((range) => ({ ...range, to: event.target.value }))
+              }
+            />
+          </div>
+
+          <Button type="submit" variant="outline">
+            Aplicar fechas
+          </Button>
+
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => {
+              setDraftRange(EMPTY_RANGE);
+              onApplyRange(EMPTY_RANGE);
+            }}
+          >
+            Limpiar
+          </Button>
+        </form>
+
+        {actions}
+      </div>
 
       <DataTable
         columns={columns}

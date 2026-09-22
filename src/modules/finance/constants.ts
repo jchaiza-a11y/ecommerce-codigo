@@ -1,7 +1,12 @@
-import type { FinanceListFiltersInput } from "@/modules/finance/schemas/finance.schema";
+import {
+  FINANCE_EXPENSE_CATEGORIES,
+  FINANCE_INCOME_CATEGORIES,
+  type FinanceListFiltersInput,
+} from "@/modules/finance/schemas/finance.schema";
 import type {
   FinanceExpenseCategory,
   FinanceExpenseOrigin,
+  FinanceIncomeCategory,
   FinanceIncomeOrigin,
 } from "@/modules/finance/types/finance.types";
 
@@ -37,6 +42,10 @@ export const EXPENSE_ORIGIN_LABELS: Record<FinanceExpenseOrigin, string> = {
   manual: "Manual",
 };
 
+/**
+ * Los dos mapas son `Record` del enum completo: si Postgres gana una categoría
+ * y no se traduce aquí, el tipo lo delata en compilación.
+ */
 export const EXPENSE_CATEGORY_LABELS: Record<FinanceExpenseCategory, string> = {
   alquiler: "Alquiler",
   servicios: "Servicios",
@@ -44,6 +53,21 @@ export const EXPENSE_CATEGORY_LABELS: Record<FinanceExpenseCategory, string> = {
   personal: "Personal",
   otro: "Otro",
 };
+
+export const INCOME_CATEGORY_LABELS: Record<FinanceIncomeCategory, string> = {
+  venta_extra: "Venta extra",
+  financiero: "Financiero",
+  otro: "Otro",
+};
+
+/** Opciones del `Select` de categoría de los diálogos de alta/edición (016). */
+export const INCOME_CATEGORY_OPTIONS = FINANCE_INCOME_CATEGORIES.map(
+  (value) => ({ value, label: INCOME_CATEGORY_LABELS[value] }),
+);
+
+export const EXPENSE_CATEGORY_OPTIONS = FINANCE_EXPENSE_CATEGORIES.map(
+  (value) => ({ value, label: EXPENSE_CATEGORY_LABELS[value] }),
+);
 
 /** Opciones del filtro por columna de cada listado, en el orden del enum. */
 export const INCOME_ORIGIN_OPTIONS = Object.entries(INCOME_ORIGIN_LABELS).map(
@@ -67,6 +91,15 @@ const dateTimeFormatter = new Intl.DateTimeFormat("es-ES", {
 /** La fecha viaja como ISO en el JSON de la API y como `Date` en el servidor. */
 export function formatDateTime(value: Date | string): string {
   return dateTimeFormatter.format(new Date(value));
+}
+
+/**
+ * Valor de un `<input type="date">` a partir de la fecha del movimiento. En UTC
+ * a propósito: el alta guarda la medianoche UTC del día elegido, así que leerla
+ * en horario local devolvería el día anterior a media Europa.
+ */
+export function toDateInputValue(value: Date | string): string {
+  return new Date(value).toISOString().slice(0, 10);
 }
 
 /**
