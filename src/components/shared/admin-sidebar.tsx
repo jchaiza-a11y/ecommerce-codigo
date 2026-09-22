@@ -44,9 +44,14 @@ const NAV_ITEMS: NavItem[] = [
     icon: Tags,
     requiredPermission: "categories.view",
   },
-  // Pedidos y Clientes siguen sin página real, así que no tienen permiso propio
-  // que comprobar (003 §3, fuera de alcance).
-  { href: "/admin/orders", label: "Pedidos", icon: ShoppingCart },
+  {
+    href: "/admin/orders",
+    label: "Pedidos",
+    icon: ShoppingCart,
+    requiredPermission: "orders.view",
+  },
+  // Clientes sigue sin página real, así que no tiene permiso propio que
+  // comprobar (003 §3, fuera de alcance).
   { href: "/admin/customers", label: "Clientes", icon: UsersRound },
   {
     href: "/admin/users",

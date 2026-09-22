@@ -26,6 +26,8 @@ export const PERMISSION_LABELS: Record<PermissionCode, string> = {
   "users.deactivate": "Puede activar y desactivar usuarios",
   "users.assign_roles": "Puede asignar roles a los usuarios",
 
+  "orders.view": "Puede ver los pedidos y su detalle",
+
   "roles.view": "Puede consultar el catálogo de roles",
 
   "audit_logs.view": "Puede consultar la bitácora de auditoría",

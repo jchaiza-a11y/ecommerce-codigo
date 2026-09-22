@@ -10,8 +10,12 @@ type FakeOrder = {
 } | undefined;
 
 let orderResult: FakeOrder;
+let adminOrderResult: FakeOrder;
 mock.module("@/server/repositories/order.repository", {
-  namedExports: { findByIdAndUserId: async () => orderResult },
+  namedExports: {
+    findByIdAndUserId: async () => orderResult,
+    findById: async () => adminOrderResult,
+  },
 });
 
 let retrievePaymentIntent = async (_id: string, _opts: unknown): Promise<unknown> => ({});
@@ -19,7 +23,9 @@ mockStripe({
   paymentIntents: { retrieve: (...args: [string, unknown]) => retrievePaymentIntent(...args) },
 });
 
-const { resolveOrderReceiptUrl } = await import("@/server/services/order-receipt.service.ts");
+const { resolveOrderReceiptUrl, resolveAdminOrderReceiptUrl } = await import(
+  "@/server/services/order-receipt.service.ts"
+);
 
 test("returns not_found when the order doesn't belong to the user", async () => {
   orderResult = undefined;
@@ -79,5 +85,45 @@ test("returns the receipt url from the expanded charge", async () => {
   assert.deepEqual(await resolveOrderReceiptUrl("user_1", "order_1"), {
     status: "ok",
     url: "https://pay.stripe.com/receipts/abc",
+  });
+});
+
+test("the admin variant returns not_found for an order that doesn't exist", async () => {
+  adminOrderResult = undefined;
+  assert.deepEqual(await resolveAdminOrderReceiptUrl("order_1"), {
+    status: "not_found",
+  });
+});
+
+test("the admin variant still refuses an unpaid order", async () => {
+  adminOrderResult = { status: "pending", stripePaymentIntentId: null };
+  assert.deepEqual(await resolveAdminOrderReceiptUrl("order_1"), {
+    status: "not_found",
+  });
+});
+
+test("the admin variant resolves any owner's receipt, not just the caller's", async () => {
+  // El pedido es de otro usuario y aun así resuelve: la autorización la puso
+  // `orders.view` en el handler, no el dueño en el `where`.
+  orderResult = undefined;
+  adminOrderResult = { status: "paid", stripePaymentIntentId: "pi_9" };
+  retrievePaymentIntent = async () => ({
+    latest_charge: { receipt_url: "https://pay.stripe.com/receipts/xyz" },
+  });
+
+  assert.deepEqual(await resolveAdminOrderReceiptUrl("order_9"), {
+    status: "ok",
+    url: "https://pay.stripe.com/receipts/xyz",
+  });
+});
+
+test("the admin variant reports stripe_unavailable when Stripe throws", async () => {
+  adminOrderResult = { status: "paid", stripePaymentIntentId: "pi_9" };
+  retrievePaymentIntent = async () => {
+    throw new Error("Stripe is down");
+  };
+
+  assert.deepEqual(await resolveAdminOrderReceiptUrl("order_9"), {
+    status: "stripe_unavailable",
   });
 });
