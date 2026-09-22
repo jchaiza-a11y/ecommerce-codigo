@@ -16,6 +16,9 @@ const ADMIN_ROUTE_PERMISSIONS: ReadonlyArray<{
   permission: PermissionCode;
 }> = [
   { prefix: "/admin/products", permission: "products.view" },
+  // Inventario reutiliza los permisos del catálogo: no hay código RBAC propio
+  // (013 §Decisiones 2).
+  { prefix: "/admin/inventory", permission: "products.view" },
   { prefix: "/admin/categories", permission: "categories.view" },
   { prefix: "/admin/users", permission: "users.view" },
   { prefix: "/admin/roles", permission: "roles.view" },
@@ -24,6 +27,9 @@ const ADMIN_ROUTE_PERMISSIONS: ReadonlyArray<{
   { prefix: "/api/admin/roles", permission: "roles.view" },
   { prefix: "/api/admin/audit-logs", permission: "audit_logs.view" },
   { prefix: "/api/admin/metrics", permission: "dashboard.view" },
+  // El `PATCH` de reposición exige además `products.update` dentro del propio
+  // handler: `createRouteMatcher` no distingue el método HTTP.
+  { prefix: "/api/admin/inventory", permission: "products.view" },
   { prefix: "/admin", permission: "dashboard.view" },
 ];
 
@@ -36,6 +42,7 @@ const ADMIN_SECTION_FALLBACKS: ReadonlyArray<{
   permission: PermissionCode;
 }> = [
   { path: "/admin/products", permission: "products.view" },
+  { path: "/admin/inventory", permission: "products.view" },
   { path: "/admin/categories", permission: "categories.view" },
   { path: "/admin/users", permission: "users.view" },
   { path: "/admin/roles", permission: "roles.view" },

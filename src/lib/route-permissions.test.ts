@@ -42,6 +42,29 @@ test("guards the dashboard metrics endpoint with dashboard.view", () => {
   assert.equal(getRequiredPermission("/api/admin/metrics"), "dashboard.view");
 });
 
+test("guards the inventory page with products.view, not dashboard.view", () => {
+  assert.equal(getRequiredPermission("/admin/inventory"), "products.view");
+});
+
+test("guards the inventory endpoint with products.view", () => {
+  assert.equal(getRequiredPermission("/api/admin/inventory"), "products.view");
+});
+
+test("guards the per-product inventory endpoints with products.view", () => {
+  assert.equal(
+    getRequiredPermission(
+      "/api/admin/inventory/550e8400-e29b-41d4-a716-446655440000/stock",
+    ),
+    "products.view",
+  );
+  assert.equal(
+    getRequiredPermission(
+      "/api/admin/inventory/550e8400-e29b-41d4-a716-446655440000/threshold",
+    ),
+    "products.view",
+  );
+});
+
 test("returns null for an empty permission set", () => {
   assert.equal(getFirstAllowedAdminPath([]), null);
 });
@@ -55,6 +78,10 @@ test("returns the first matching section in menu order when several match", () =
     getFirstAllowedAdminPath(["categories.view", "products.view"]),
     "/admin/products",
   );
+});
+
+test("prefers products over inventory as fallback: both share products.view", () => {
+  assert.equal(getFirstAllowedAdminPath(["products.view"]), "/admin/products");
 });
 
 test("returns null when permissions don't match any admin section", () => {

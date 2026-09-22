@@ -401,6 +401,95 @@ export function buildStockDecrement(
 }
 
 /**
+ * Fila de la tabla de inventario (013 §API). Derivada de `Product` con `Pick`,
+ * no redeclarada: si una columna cambia de tipo en el schema, esto deja de
+ * compilar en vez de mentir (SETUP.md §4 regla 5).
+ */
+export type InventoryItem = Pick<
+  Product,
+  "id" | "name" | "sku" | "isActive" | "stock" | "lowStockThreshold"
+> & { categoryName: string };
+
+// Proyección compartida por el listado y la relectura post-batch: seis columnas
+// y el nombre de la categoría, nada más. El `GET /api/products` público no
+// sirve para esto (013 §Decisiones 7).
+const inventorySelection = {
+  id: product.id,
+  name: product.name,
+  sku: product.sku,
+  categoryName: category.name,
+  isActive: product.isActive,
+  stock: product.stock,
+  lowStockThreshold: product.lowStockThreshold,
+};
+
+/**
+ * Listado de inventario: productos vivos, los de menos stock primero, para que
+ * agotados y bajo mínimos encabecen la tabla sin `initialSorting` en el cliente
+ * (013 AC1). El desempate por nombre hace el orden estable entre peticiones.
+ */
+export async function findInventory(): Promise<InventoryItem[]> {
+  return db
+    .select(inventorySelection)
+    .from(product)
+    .innerJoin(category, eq(product.categoryId, category.id))
+    .where(isNull(product.deletedAt))
+    .orderBy(asc(product.stock), asc(product.name));
+}
+
+/**
+ * Una fila del inventario. Sirve tanto para el `before` de la bitácora como
+ * para la relectura posterior al batch, que `db.batch()` no devuelve filas
+ * (013 §Decisiones 6). Acotada a productos vivos: un soft delete es un 404.
+ */
+export async function findInventoryById(
+  id: string,
+): Promise<InventoryItem | undefined> {
+  const [found] = await db
+    .select(inventorySelection)
+    .from(product)
+    .innerJoin(category, eq(product.categoryId, category.id))
+    .where(and(eq(product.id, id), isNull(product.deletedAt)))
+    .limit(1);
+
+  return found;
+}
+
+/**
+ * Reposición de stock (013 T7), sin ejecutar: viaja en el mismo `db.batch()`
+ * que su registro en `audit_logs`.
+ *
+ * La suma la hace Postgres, no JavaScript: un `stock + quantity` calculado en
+ * el handler perdería la reposición concurrente que se coló entre la lectura y
+ * la escritura (013 §Decisiones 5). El tope de `quantity` lo pone Zod antes de
+ * llegar aquí, así que el `integer` no desborda.
+ */
+export function buildStockIncrement(
+  productId: string,
+  quantity: number,
+): PgStatement {
+  return db
+    .update(product)
+    .set({ stock: sql`${product.stock} + ${quantity}` })
+    .where(and(eq(product.id, productId), isNull(product.deletedAt)));
+}
+
+/**
+ * Ajuste del umbral de alerta (013 T7), sin ejecutar. Aquí sí es un reemplazo:
+ * el umbral no se acumula. El valor ya viene validado como entero `>= 0`, que
+ * es lo que exige el check `products_low_stock_threshold_non_negative`.
+ */
+export function buildLowStockThresholdUpdate(
+  productId: string,
+  threshold: number,
+): PgStatement {
+  return db
+    .update(product)
+    .set({ lowStockThreshold: threshold })
+    .where(and(eq(product.id, productId), isNull(product.deletedAt)));
+}
+
+/**
  * Soft delete (§8.4): la fila sobrevive para las referencias futuras (líneas de
  * pedido, carritos) y solo se marca la fecha de retirada. Acotado a filas vivas,
  * así que un segundo borrado no afecta filas y el handler responde 404.
