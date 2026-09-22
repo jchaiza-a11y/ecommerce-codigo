@@ -36,6 +36,20 @@
       "when": 1789008820932,
       "tag": "0004_previous_venom",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1789615335709,
+      "tag": "0005_aspiring_wolfsbane",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790044635719,
+      "tag": "0006_freezing_goblin_queen",
+      "breakpoints": true
     }
   ]
 }

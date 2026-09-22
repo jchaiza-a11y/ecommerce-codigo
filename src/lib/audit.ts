@@ -16,6 +16,11 @@ export const AUDIT_ACTIONS = {
   ROLES_ASSIGNED: "user.roles_assigned",
   ORDER_PAID: "order.paid",
   ORDER_PAYMENT_FAILED: "order.payment_failed",
+  // Solo las mutaciones manuales de Finanzas: las filas de ledger que escribe
+  // el fulfillment son derivadas del pedido y ya quedan trazadas por
+  // `order.paid` y por su propio `order_id` (014 §Notas).
+  FINANCE_SETTINGS_UPDATED: "finance.settings_updated",
+  FINANCE_PRODUCT_COST_UPDATED: "finance.product_cost_updated",
 } as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];

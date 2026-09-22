@@ -31,6 +31,10 @@ export const PERMISSION_LABELS: Record<PermissionCode, string> = {
   "roles.view": "Puede consultar el catálogo de roles",
 
   "audit_logs.view": "Puede consultar la bitácora de auditoría",
+
+  "finance.view": "Puede consultar ingresos, egresos y márgenes",
+  "finance.manage":
+    "Puede editar costos de producto y la configuración de Finanzas",
 };
 
 /** Cae al propio código si llegara uno que la UI todavía no conoce. */

@@ -22,9 +22,15 @@ const ADMIN_ROUTE_PERMISSIONS: ReadonlyArray<{
   { prefix: "/admin/roles", permission: "roles.view" },
   { prefix: "/admin/audit-logs", permission: "audit_logs.view" },
   { prefix: "/api/admin/orders", permission: "orders.view" },
+  // `finance.view` es el mínimo de entrada a la sección; las mutaciones exigen
+  // `finance.manage` dentro de su Route Handler, que `createRouteMatcher` no
+  // puede resolver aquí por no distinguir el método HTTP (014 AC5).
+  { prefix: "/admin/finance", permission: "finance.view" },
   { prefix: "/api/admin/users", permission: "users.view" },
   { prefix: "/api/admin/roles", permission: "roles.view" },
   { prefix: "/api/admin/audit-logs", permission: "audit_logs.view" },
+  { prefix: "/api/admin/metrics", permission: "dashboard.view" },
+  { prefix: "/api/admin/finance", permission: "finance.view" },
   { prefix: "/admin", permission: "dashboard.view" },
 ];
 
@@ -42,6 +48,7 @@ const ADMIN_SECTION_FALLBACKS: ReadonlyArray<{
   { path: "/admin/users", permission: "users.view" },
   { path: "/admin/roles", permission: "roles.view" },
   { path: "/admin/audit-logs", permission: "audit_logs.view" },
+  { path: "/admin/finance", permission: "finance.view" },
 ];
 
 /** Rutas de administración accesibles a cualquier sesión: sin ellas, bucle. */

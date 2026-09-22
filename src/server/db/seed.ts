@@ -108,6 +108,17 @@ const PERMISSION_CATALOG: Record<
     action: "view",
     description: "Consultar la bitácora de auditoría",
   },
+
+  "finance.view": {
+    resource: "finance",
+    action: "view",
+    description: "Consultar ingresos, egresos y márgenes",
+  },
+  "finance.manage": {
+    resource: "finance",
+    action: "manage",
+    description: "Editar costos de producto y la configuración de Finanzas",
+  },
 };
 
 const ROLE_CATALOG: Record<RoleSlug, { name: string; description: string }> = {
@@ -165,7 +176,11 @@ const ROLE_PERMISSION_MATRIX: Record<RoleSlug, readonly PermissionCode[]> = {
     "orders.view",
     "roles.view",
     "audit_logs.view",
+    "finance.view",
+    "finance.manage",
   ],
+  // `manager` ve Finanzas pero no la edita, igual que ve el catálogo sin poder
+  // crear ni eliminar productos (014 §Notas).
   manager: [
     "dashboard.view",
     "products.view",
@@ -173,6 +188,7 @@ const ROLE_PERMISSION_MATRIX: Record<RoleSlug, readonly PermissionCode[]> = {
     "categories.view",
     "users.view",
     "orders.view",
+    "finance.view",
   ],
   audit: ["audit_logs.view"],
   employee: [],
