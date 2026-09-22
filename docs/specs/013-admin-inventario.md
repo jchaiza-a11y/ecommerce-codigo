@@ -138,15 +138,15 @@ valida con `productIdSchema` (uuid) reutilizado de `modules/products/schemas`.
 - [x] T12 — Route Handler `PATCH …/[productId]/stock`: guard → Zod → lectura previa → `runBatch([incremento, log])` → relectura · `src/app/api/admin/inventory/[productId]/stock/route.ts`
 - [x] T13 — Route Handler `PATCH …/[productId]/threshold`, mismo patrón · `…/[productId]/threshold/route.ts`
 - [x] T14 — Service axios `getInventory`, `adjustStock`, `updateLowStockThreshold` · `src/modules/inventory/services/inventory.service.ts` (+ test)
-- [ ] T15 — `inventoryKeys`, `STOCK_STATUS_LABELS`/`_VARIANTS` y `getStockStatus(stock, threshold)` puro · `src/modules/inventory/constants.ts`
-- [ ] T16 — Tests de `getStockStatus` (frontera `stock === threshold`, `threshold = 0`) · `…/constants.test.ts`
-- [ ] T17 — Hook `useInventory()` · `src/modules/inventory/hooks/use-inventory.ts`
-- [ ] T18 — Hooks `useAdjustStock()` y `useUpdateLowStockThreshold()` con invalidación de `inventoryKeys.all` **y** `productKeys.all` · `src/modules/inventory/hooks/use-inventory-mutations.ts`
-- [ ] T19 — Celda de reposición: input numérico + "Agregar", deshabilitado mientras la mutación corre · `src/modules/inventory/components/stock-adjust-cell.tsx`
-- [ ] T20 — Celda de umbral inline (edita, confirma, cancela) · `src/modules/inventory/components/threshold-cell.tsx`
-- [ ] T21 — Columnas: producto, SKU, categoría, stock, umbral, estado con `Badge`, reposición · `src/modules/inventory/components/inventory-columns.tsx`
-- [ ] T22 — Contenedor `"use client"`: toggle "solo stock bajo" + `DataTable` + estados de carga / error+reintentar / vacío · `src/modules/inventory/components/inventory-table.tsx`
-- [ ] T23 — Página Server Component con `requirePermissionInPage("products.view")` · `src/app/(admin)/admin/inventory/page.tsx`
+- [x] T15 — `inventoryKeys`, `STOCK_STATUS_LABELS`/`_VARIANTS` y `getStockStatus(stock, threshold)` puro · `src/modules/inventory/constants.ts`
+- [x] T16 — Tests de `getStockStatus` (frontera `stock === threshold`, `threshold = 0`) · `…/constants.test.ts`
+- [x] T17 — Hook `useInventory()` · `src/modules/inventory/hooks/use-inventory.ts`
+- [x] T18 — Hooks `useAdjustStock()` y `useUpdateLowStockThreshold()` con invalidación de `inventoryKeys.all` **y** `productKeys.all` · `src/modules/inventory/hooks/use-inventory-mutations.ts`
+- [x] T19 — Celda de reposición: input numérico + "Agregar", deshabilitado mientras la mutación corre · `src/modules/inventory/components/stock-adjust-cell.tsx`
+- [x] T20 — Celda de umbral inline (edita, confirma, cancela) · `src/modules/inventory/components/threshold-cell.tsx`
+- [x] T21 — Columnas: producto, SKU, categoría, stock, umbral, estado con `Badge`, reposición · `src/modules/inventory/components/inventory-columns.tsx`
+- [x] T22 — Contenedor `"use client"`: toggle "solo stock bajo" + `DataTable` + estados de carga / error+reintentar / vacío · `src/modules/inventory/components/inventory-table.tsx`
+- [x] T23 — Página Server Component con `requirePermissionInPage("products.view")` · `src/app/(admin)/admin/inventory/page.tsx`
 
 Verificación final: `npm run typecheck && npm run lint && npm run test` (el `build` lo corre el reviewer)
 
