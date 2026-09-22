@@ -25,6 +25,11 @@ export const product = pgTable(
     brand: varchar("brand", { length: 60 }),
     priceCents: integer("price_cents").notNull(),
     compareAtPriceCents: integer("compare_at_price_cents"),
+    // Costo de adquisición, introducido a mano desde Finanzas (014). Nullable a
+    // propósito: `null` significa "sin costear todavía" y no puede confundirse
+    // con un costo real de 0, distinción que el COGS necesita para no inflar el
+    // margen con productos sin dato.
+    costCents: integer("cost_cents"),
     stock: integer("stock").notNull().default(0),
     lowStockThreshold: integer("low_stock_threshold").notNull().default(5),
     categoryId: uuid("category_id")
@@ -56,6 +61,10 @@ export const product = pgTable(
     check(
       "products_compare_at_price_cents_non_negative",
       sql`${t.compareAtPriceCents} is null or ${t.compareAtPriceCents} >= 0`,
+    ),
+    check(
+      "products_cost_cents_non_negative",
+      sql`${t.costCents} is null or ${t.costCents} >= 0`,
     ),
     check("products_stock_non_negative", sql`${t.stock} >= 0`),
     check(

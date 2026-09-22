@@ -4,6 +4,7 @@ import type Stripe from "stripe";
 
 import { AUDIT_ACTIONS, buildAuditLogInsert } from "@/lib/audit";
 import { runBatch, type PgStatement } from "@/server/db/batch";
+import * as financeRepository from "@/server/repositories/finance.repository";
 import * as orderRepository from "@/server/repositories/order.repository";
 import * as productRepository from "@/server/repositories/product.repository";
 
@@ -38,19 +39,35 @@ type OversoldLine = {
   available: number;
 };
 
+type OrderLine = { productId: string; quantity: number; unitPriceCents: number };
+
+type PricedLine = {
+  item: OrderLine;
+  product: Awaited<ReturnType<typeof productRepository.findById>>;
+};
+
 /**
- * Líneas cuyo stock actual ya no cubre lo comprado. No frena el fulfillment —el
- * cliente ya pagó— pero queda anotado para que operaciones lo resuelva.
+ * Cada línea del pedido con el producto que referencia. Un único fetch alimenta
+ * dos cálculos —la sobreventa (stock) y el COGS (`costCents`)—: repetirlo sería
+ * una segunda ronda de N consultas por el mismo dato.
  */
-async function findOversoldLines(
-  items: readonly { productId: string; quantity: number }[],
-): Promise<OversoldLine[]> {
+async function loadPricedLines(
+  items: readonly OrderLine[],
+): Promise<PricedLine[]> {
   const products = await Promise.all(
     items.map((item) => productRepository.findById(item.productId)),
   );
 
-  return items.flatMap((item, index) => {
-    const available = products[index]?.stock ?? 0;
+  return items.map((item, index) => ({ item, product: products[index] }));
+}
+
+/**
+ * Líneas cuyo stock actual ya no cubre lo comprado. No frena el fulfillment —el
+ * cliente ya pagó— pero queda anotado para que operaciones lo resuelva.
+ */
+function findOversoldLines(lines: readonly PricedLine[]): OversoldLine[] {
+  return lines.flatMap(({ item, product }) => {
+    const available = product?.stock ?? 0;
 
     return available < item.quantity
       ? [{ productId: item.productId, requested: item.quantity, available }]
@@ -59,14 +76,30 @@ async function findOversoldLines(
 }
 
 /**
- * Marca el pedido como pagado, descuenta el stock y audita, todo en un único
- * `batch` (CLAUDE.md §4.9).
+ * Un producto que ya no se puede leer (retirado con soft delete) cuenta como
+ * línea sin costo, no como costo cero: el COGS no debe dar por respaldada una
+ * venta cuyo costo desconoce.
+ */
+function toLedgerLines(
+  lines: readonly PricedLine[],
+): financeRepository.LedgerLine[] {
+  return lines.map(({ item, product }) => ({
+    quantity: item.quantity,
+    unitPriceCents: item.unitPriceCents,
+    costCents: product?.costCents ?? null,
+  }));
+}
+
+/**
+ * Marca el pedido como pagado, descuenta el stock, registra el ledger de
+ * Finanzas y audita, todo en un único `batch` (CLAUDE.md §4.9).
  *
  * La idempotencia es doble: el pre-chequeo de `pending` corta el caso normal, y
- * cada sentencia lleva su propia guarda SQL para el caso de dos entregas
- * simultáneas, que el pre-chequeo por sí solo no cubre. Los descuentos van
- * antes que el `buildMarkPaid` porque su guarda es justamente que el pedido siga
- * en `pending`.
+ * cada sentencia se defiende sola del caso de dos entregas simultáneas, que el
+ * pre-chequeo por sí solo no cubre —guarda SQL en las de pedido y stock, índice
+ * único parcial más `onConflictDoNothing()` en las de ledger (014 §Notas)—. Los
+ * descuentos van antes que el `buildMarkPaid` porque su guarda es justamente
+ * que el pedido siga en `pending`.
  */
 export async function fulfillCheckout(
   session: Stripe.Checkout.Session,
@@ -90,7 +123,11 @@ export async function fulfillCheckout(
     return "order_not_found";
   }
 
-  const oversold = await findOversoldLines(detail.items);
+  const pricedLines = await loadPricedLines(detail.items);
+  const oversold = findOversoldLines(pricedLines);
+  // La tarifa se lee antes de componer el batch: dentro de él no se puede
+  // alimentar una sentencia con el resultado de otra (003 §8.5).
+  const { shippingCostCents } = await financeRepository.getSettings();
   const paymentIntentId = getPaymentIntentId(session);
 
   const statements: PgStatement[] = [
@@ -102,6 +139,12 @@ export async function fulfillCheckout(
       ),
     ),
     orderRepository.buildMarkPaid(detail.id, paymentIntentId),
+    // Ledger de Finanzas (014): el ingreso y sus dos egresos nacen con el pago,
+    // sin paso manual. Van en el mismo batch, así que un fallo aquí revierte el
+    // pedido entero y Stripe reintenta el evento completo.
+    financeRepository.buildIncomeInsert(detail),
+    financeRepository.buildCogsInsert(detail, toLedgerLines(pricedLines)),
+    financeRepository.buildShippingInsert(detail, shippingCostCents),
     buildAuditLogInsert({
       // El pago es del cliente, no del sistema: dejar el actor en `null`
       // perdería la trazabilidad por usuario que da el índice `(actor_id, …)`.

@@ -33,6 +33,9 @@ export const PERMISSIONS = {
   ROLES_VIEW: "roles.view",
 
   AUDIT_LOGS_VIEW: "audit_logs.view",
+
+  FINANCE_VIEW: "finance.view",
+  FINANCE_MANAGE: "finance.manage",
 } as const;
 
 export type PermissionCode = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
